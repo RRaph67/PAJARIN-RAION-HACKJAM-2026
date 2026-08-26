@@ -11,9 +11,9 @@ class AppConstants {
   // ─── Supabase ─────────────────────────────────────────────────────────────
   // Cara mendapatkan: Supabase Dashboard → Project Settings → API
   static const String supabaseUrl =
-      '[PLACEHOLDER: https://xxxxxxxxxxxxxxxxxxxx.supabase.co]';
+      'https://zippnznmisbczfmgvbkj.supabase.co'; // <- ganti ini
   static const String supabaseAnonKey =
-      '[PLACEHOLDER: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...]';
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InppcHBuem5taXNiY3pmbWd2YmtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2Mzk0MDcsImV4cCI6MjEwMzIxNTQwN30.WcjumwG2i2zSIWqlwk6DXN8lCOn1Hrz1cGQJ-YC41FA'; // <- ganti ini
 
   // ─── URL API Backend Tambahan ─────────────────────────────────────────────
   // Kosongkan jika Supabase adalah satu-satunya backend yang digunakan.
@@ -30,10 +30,10 @@ class AppConstants {
 
   // ─── Kunci SharedPreferences ──────────────────────────────────────────────
   // Kunci-kunci ini digunakan untuk menyimpan & membaca data lokal.
-  static const String prefKeyToken = 'auth_token';        // token autentikasi
-  static const String prefKeyUserId = 'user_id';          // ID pengguna yang login
+  static const String prefKeyToken = 'auth_token'; // token autentikasi
+  static const String prefKeyUserId = 'user_id'; // ID pengguna yang login
   static const String prefKeyIsOnboarded = 'is_onboarded'; // sudah onboarding?
-  static const String prefKeyThemeMode = 'theme_mode';    // preferensi tema
+  static const String prefKeyThemeMode = 'theme_mode'; // preferensi tema
   // [PLACEHOLDER] Tambahkan kunci SharedPref lain sesuai kebutuhan fitur
 
   // ─── Path Aset : SVG & Ikon ───────────────────────────────────────────────
@@ -50,7 +50,7 @@ class AppConstants {
   // [PLACEHOLDER] Ganti nama file dengan nama file asli dari tim UI/UX
   // Letakkan file gambar di dalam folder: assets/images/
   static const String imgAppIcon =
-      'assets/images/[PLACEHOLDER_app_icon].png';         // ukuran: 1024×1024
+      'assets/images/[PLACEHOLDER_app_icon].png'; // ukuran: 1024×1024
   static const String imgOnboarding1 =
       'assets/images/[PLACEHOLDER_onboarding_1].png';
 

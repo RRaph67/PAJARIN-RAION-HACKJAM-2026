@@ -24,8 +24,7 @@ class ProfileRepository {
 
       return UserModel.fromJson(response);
     } catch (e) {
-      throw ProfileRepositoryException(
-          'Gagal mengambil data profil: $e');
+      throw ProfileRepositoryException('Gagal mengambil data profil: $e');
     }
   }
 
@@ -58,8 +57,7 @@ class ProfileRepository {
 
       return UserModel.fromJson(response);
     } catch (e) {
-      throw ProfileRepositoryException(
-          'Gagal membuat profil: $e');
+      throw ProfileRepositoryException('Gagal membuat profil: $e');
     }
   }
 
@@ -71,6 +69,7 @@ class ProfileRepository {
     String? userType,
     String? jobTitle,
     double? estimatedIncome,
+    String? taxUnderstandingLevel,
   }) async {
     try {
       // Bangun map hanya berisi field yang ingin diupdate (selain null).
@@ -79,6 +78,9 @@ class ProfileRepository {
       if (userType != null) data['user_type'] = userType;
       if (jobTitle != null) data['job_title'] = jobTitle;
       if (estimatedIncome != null) data['estimated_income'] = estimatedIncome;
+      if (taxUnderstandingLevel != null) {
+        data['tax_understanding_level'] = taxUnderstandingLevel;
+      }
 
       if (data.isEmpty) {
         return await getProfile(userId);
@@ -93,8 +95,7 @@ class ProfileRepository {
 
       return UserModel.fromJson(response);
     } catch (e) {
-      throw ProfileRepositoryException(
-          'Gagal memperbarui profil: $e');
+      throw ProfileRepositoryException('Gagal memperbarui profil: $e');
     }
   }
 
@@ -102,13 +103,9 @@ class ProfileRepository {
   // Menghapus baris data dari tabel `users`.
   Future<void> deleteProfile(String userId) async {
     try {
-      await supabase
-          .from(_tableName)
-          .delete()
-          .eq('id', userId);
+      await supabase.from(_tableName).delete().eq('id', userId);
     } catch (e) {
-      throw ProfileRepositoryException(
-          'Gagal menghapus profil: $e');
+      throw ProfileRepositoryException('Gagal menghapus profil: $e');
     }
   }
 }

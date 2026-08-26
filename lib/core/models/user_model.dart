@@ -11,6 +11,7 @@ class UserModel {
   final String userType;
   final String? jobTitle;
   final double? estimatedIncome;
+  final String? taxUnderstandingLevel;
 
   const UserModel({
     required this.id,
@@ -19,6 +20,7 @@ class UserModel {
     required this.userType,
     this.jobTitle,
     this.estimatedIncome,
+    this.taxUnderstandingLevel,
   });
 
   // ─── Factory: buat UserModel dari JSON Supabase ──────────────────────────
@@ -34,6 +36,7 @@ class UserModel {
       estimatedIncome: json['estimated_income'] != null
           ? (json['estimated_income'] as num).toDouble()
           : null,
+      taxUnderstandingLevel: json['tax_understanding_level'] as String?,
     );
   }
 
@@ -47,6 +50,7 @@ class UserModel {
       'user_type': userType,
       'job_title': jobTitle,
       'estimated_income': estimatedIncome,
+      'tax_understanding_level': taxUnderstandingLevel,
     };
   }
 
@@ -59,6 +63,7 @@ class UserModel {
     String? userType,
     String? jobTitle,
     double? estimatedIncome,
+    String? taxUnderstandingLevel,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -67,6 +72,8 @@ class UserModel {
       userType: userType ?? this.userType,
       jobTitle: jobTitle ?? this.jobTitle,
       estimatedIncome: estimatedIncome ?? this.estimatedIncome,
+      taxUnderstandingLevel:
+          taxUnderstandingLevel ?? this.taxUnderstandingLevel,
     );
   }
 
@@ -74,6 +81,7 @@ class UserModel {
   String toString() {
     return 'UserModel(id: $id, name: $name, email: $email, '
         'userType: $userType, jobTitle: $jobTitle, '
-        'estimatedIncome: $estimatedIncome)';
+        'estimatedIncome: $estimatedIncome, '
+        'taxUnderstandingLevel: $taxUnderstandingLevel)';
   }
 }

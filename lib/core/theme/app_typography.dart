@@ -1,129 +1,183 @@
 // =============================================================================
 // app_typography.dart
-// Semua konfigurasi tipografi (font & skala teks) untuk RaionHackJam15.
-// File ini diisi setelah tim UI/UX mengkonfirmasi nama font yang digunakan.
-//
-// Cara pakai:
-//   Text('Halo', style: Theme.of(context).textTheme.titleLarge)
+// Skala tipografi menggunakan font Nunito untuk RaionHackJam15.
+// Tersedia: Regular (400), Medium (500), SemiBold (600), Bold (700), ExtraBold (800)
 // =============================================================================
 
 import 'package:flutter/material.dart';
+import 'app_colors.dart';
 
 class AppTypography {
-  AppTypography._(); // class ini tidak boleh diinstansiasi
+  AppTypography._();
 
-  // ─── Font Family ──────────────────────────────────────────────────────────
-  // [PLACEHOLDER] Ganti dengan nama font dari Design System (konfirmasi ke UI/UX).
-  // Contoh: 'Poppins', 'Inter', 'Outfit', 'Nunito', 'Roboto'
-  //
-  // Jika menggunakan Google Fonts, tambahkan package `google_fonts` ke pubspec.yaml
-  // dan ganti pendekatan ini dengan GoogleFonts.interTextTheme() atau sejenisnya.
-  //
-  // Jika menggunakan font kustom (.ttf), daftarkan fontnya di pubspec.yaml terlebih dulu.
-  static const String fontFamily = '[PLACEHOLDER_FONT_FAMILY]'; // contoh: 'Inter'
+  static const String fontFamily = 'Nunito';
 
-  // ─── TextTheme (Skala Tipografi Material 3) ────────────────────────────────
-  // Referensi hierarki teks Material 3:
-  //   Display  → teks hero, angka besar, heading layar penuh
-  //   Headline → judul halaman / section besar
-  //   Title    → judul kartu / komponen / dialog
-  //   Body     → konten paragraf / deskripsi
-  //   Label    → teks tombol, chip, caption kecil
-  static TextTheme get textTheme => const TextTheme(
+  // ─── TextStyle Helpers ──────────────────────────────────────────────────
+  // Fungsi helper untuk membuat TextStyle dengan warna yang bisa di-override.
 
-        // ── Display ───────────────────────────────────────────────────
-        // Ukuran sangat besar, biasanya hanya untuk halaman hero/landing.
-        displayLarge: TextStyle(
-          fontFamily: fontFamily,
-          fontSize: 57,
-          fontWeight: FontWeight.w400,
-          letterSpacing: -0.25,
-        ),
-        displayMedium: TextStyle(
-          fontFamily: fontFamily,
-          fontSize: 45,
-          fontWeight: FontWeight.w400,
-        ),
-        displaySmall: TextStyle(
-          fontFamily: fontFamily,
-          fontSize: 36,
-          fontWeight: FontWeight.w400,
-        ),
+  /// Regular — weight 400
+  static TextStyle _regular(double size, [Color? color]) => TextStyle(
+    fontFamily: fontFamily,
+    fontSize: size,
+    fontWeight: FontWeight.w400,
+    color: color ?? AppColors.textPrimary,
+  );
 
-        // ── Headline (Judul Halaman / Section Besar) ──────────────────
-        headlineLarge: TextStyle(
-          fontFamily: fontFamily,
-          fontSize: 32,
-          fontWeight: FontWeight.w700,
-        ),
-        headlineMedium: TextStyle(
-          fontFamily: fontFamily,
-          fontSize: 28,
-          fontWeight: FontWeight.w600,
-        ),
-        headlineSmall: TextStyle(
-          fontFamily: fontFamily,
-          fontSize: 24,
-          fontWeight: FontWeight.w600,
-        ),
+  /// Medium — weight 500
+  static TextStyle _medium(double size, [Color? color]) => TextStyle(
+    fontFamily: fontFamily,
+    fontSize: size,
+    fontWeight: FontWeight.w500,
+    color: color ?? AppColors.textPrimary,
+  );
 
-        // ── Title (Judul Kartu / Komponen / Dialog) ───────────────────
-        titleLarge: TextStyle(
-          fontFamily: fontFamily,
-          fontSize: 22,
-          fontWeight: FontWeight.w600,
-        ),
-        titleMedium: TextStyle(
-          fontFamily: fontFamily,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.15,
-        ),
-        titleSmall: TextStyle(
-          fontFamily: fontFamily,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.1,
-        ),
+  /// SemiBold — weight 600
+  static TextStyle _semiBold(double size, [Color? color]) => TextStyle(
+    fontFamily: fontFamily,
+    fontSize: size,
+    fontWeight: FontWeight.w600,
+    color: color ?? AppColors.textPrimary,
+  );
 
-        // ── Body (Konten / Paragraf / Deskripsi) ──────────────────────
-        bodyLarge: TextStyle(
-          fontFamily: fontFamily,
-          fontSize: 16,
-          fontWeight: FontWeight.w400,
-          letterSpacing: 0.5,
-        ),
-        bodyMedium: TextStyle(
-          fontFamily: fontFamily,
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-          letterSpacing: 0.25,
-        ),
-        bodySmall: TextStyle(
-          fontFamily: fontFamily,
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-          letterSpacing: 0.4,
-        ),
+  /// Bold — weight 700
+  static TextStyle _bold(double size, [Color? color]) => TextStyle(
+    fontFamily: fontFamily,
+    fontSize: size,
+    fontWeight: FontWeight.w700,
+    color: color ?? AppColors.textPrimary,
+  );
 
-        // ── Label (Tombol / Chip / Caption Kecil) ─────────────────────
-        labelLarge: TextStyle(
-          fontFamily: fontFamily,
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.1,
-        ),
-        labelMedium: TextStyle(
-          fontFamily: fontFamily,
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.5,
-        ),
-        labelSmall: TextStyle(
-          fontFamily: fontFamily,
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.5,
-        ),
-      );
+  /// ExtraBold — weight 800
+  static TextStyle _extraBold(double size, [Color? color]) => TextStyle(
+    fontFamily: fontFamily,
+    fontSize: size,
+    fontWeight: FontWeight.w800,
+    color: color ?? AppColors.textPrimary,
+  );
+
+  // ─── Display (Untuk judul sangat besar) ─────────────────────────────────
+  static TextStyle get displayLargeExtraBold => _extraBold(32);
+  static TextStyle get displayLargeBold => _bold(32);
+  static TextStyle get displayLargeSemiBold => _semiBold(32);
+  static TextStyle get displayLargeMedium => _medium(32);
+  static TextStyle get displayLargeRegular => _regular(32);
+
+  static TextStyle get displayMediumExtraBold => _extraBold(28);
+  static TextStyle get displayMediumBold => _bold(28);
+  static TextStyle get displayMediumSemiBold => _semiBold(28);
+  static TextStyle get displayMediumMedium => _medium(28);
+  static TextStyle get displayMediumRegular => _regular(28);
+
+  static TextStyle get displaySmallExtraBold => _extraBold(24);
+  static TextStyle get displaySmallBold => _bold(24);
+  static TextStyle get displaySmallSemiBold => _semiBold(24);
+  static TextStyle get displaySmallMedium => _medium(24);
+  static TextStyle get displaySmallRegular => _regular(24);
+
+  // ─── Headline (Untuk judul bagian) ──────────────────────────────────────
+  static TextStyle get headlineLargeExtraBold => _extraBold(22);
+  static TextStyle get headlineLargeBold => _bold(22);
+  static TextStyle get headlineLargeSemiBold => _semiBold(22);
+  static TextStyle get headlineLargeMedium => _medium(22);
+  static TextStyle get headlineLargeRegular => _regular(22);
+
+  static TextStyle get headlineMediumExtraBold => _extraBold(20);
+  static TextStyle get headlineMediumBold => _bold(20);
+  static TextStyle get headlineMediumSemiBold => _semiBold(20);
+  static TextStyle get headlineMediumMedium => _medium(20);
+  static TextStyle get headlineMediumRegular => _regular(20);
+
+  static TextStyle get headlineSmallExtraBold => _extraBold(18);
+  static TextStyle get headlineSmallBold => _bold(18);
+  static TextStyle get headlineSmallSemiBold => _semiBold(18);
+  static TextStyle get headlineSmallMedium => _medium(18);
+  static TextStyle get headlineSmallRegular => _regular(18);
+
+  // ─── Title (Untuk judul komponen/card) ──────────────────────────────────
+  static TextStyle get titleLargeExtraBold => _extraBold(18);
+  static TextStyle get titleLargeBold => _bold(18);
+  static TextStyle get titleLargeSemiBold => _semiBold(18);
+  static TextStyle get titleLargeMedium => _medium(18);
+  static TextStyle get titleLargeRegular => _regular(18);
+
+  static TextStyle get titleMediumExtraBold => _extraBold(16);
+  static TextStyle get titleMediumBold => _bold(16);
+  static TextStyle get titleMediumSemiBold => _semiBold(16);
+  static TextStyle get titleMediumMedium => _medium(16);
+  static TextStyle get titleMediumRegular => _regular(16);
+
+  static TextStyle get titleSmallExtraBold => _extraBold(14);
+  static TextStyle get titleSmallBold => _bold(14);
+  static TextStyle get titleSmallSemiBold => _semiBold(14);
+  static TextStyle get titleSmallMedium => _medium(14);
+  static TextStyle get titleSmallRegular => _regular(14);
+
+  // ─── Body (Untuk teks konten utama) ─────────────────────────────────────
+  static TextStyle get bodyLargeExtraBold => _extraBold(16);
+  static TextStyle get bodyLargeBold => _bold(16);
+  static TextStyle get bodyLargeSemiBold => _semiBold(16);
+  static TextStyle get bodyLargeMedium => _medium(16);
+  static TextStyle get bodyLargeRegular => _regular(16);
+
+  static TextStyle get bodyMediumExtraBold =>
+      _extraBold(14, AppColors.textSecondary);
+  static TextStyle get bodyMediumBold => _bold(14, AppColors.textSecondary);
+  static TextStyle get bodyMediumSemiBold =>
+      _semiBold(14, AppColors.textSecondary);
+  static TextStyle get bodyMediumMedium => _medium(14, AppColors.textSecondary);
+  static TextStyle get bodyMediumRegular =>
+      _regular(14, AppColors.textSecondary);
+
+  static TextStyle get bodySmallExtraBold =>
+      _extraBold(12, AppColors.textSecondary);
+  static TextStyle get bodySmallBold => _bold(12, AppColors.textSecondary);
+  static TextStyle get bodySmallSemiBold =>
+      _semiBold(12, AppColors.textSecondary);
+  static TextStyle get bodySmallMedium => _medium(12, AppColors.textSecondary);
+  static TextStyle get bodySmallRegular =>
+      _regular(12, AppColors.textSecondary);
+
+  // ─── Label (Untuk tombol, badge, caption) ───────────────────────────────
+  static TextStyle get labelLargeExtraBold => _extraBold(16, Colors.white);
+  static TextStyle get labelLargeBold => _bold(16, Colors.white);
+  static TextStyle get labelLargeSemiBold => _semiBold(16, Colors.white);
+  static TextStyle get labelLargeMedium => _medium(16, Colors.white);
+  static TextStyle get labelLargeRegular => _regular(16, Colors.white);
+
+  static TextStyle get labelMediumExtraBold => _extraBold(14, Colors.white);
+  static TextStyle get labelMediumBold => _bold(14, Colors.white);
+  static TextStyle get labelMediumSemiBold => _semiBold(14, Colors.white);
+  static TextStyle get labelMediumMedium => _medium(14, Colors.white);
+  static TextStyle get labelMediumRegular => _regular(14, Colors.white);
+
+  static TextStyle get labelSmallExtraBold => _extraBold(12, Colors.white);
+  static TextStyle get labelSmallBold => _bold(12, Colors.white);
+  static TextStyle get labelSmallSemiBold => _semiBold(12, Colors.white);
+  static TextStyle get labelSmallMedium => _medium(12, Colors.white);
+  static TextStyle get labelSmallRegular => _regular(12, Colors.white);
+
+  // ─── TextTheme (Default Material Theme) ─────────────────────────────────
+  // Digunakan oleh Theme.of(context).textTheme
+  static TextTheme get textTheme => TextTheme(
+    // Display
+    displayLarge: _extraBold(32),
+    displayMedium: _extraBold(28),
+    displaySmall: _bold(24),
+    // Headline
+    headlineLarge: _bold(22),
+    headlineMedium: _bold(20),
+    headlineSmall: _semiBold(18),
+    // Title
+    titleLarge: _bold(18),
+    titleMedium: _semiBold(16),
+    titleSmall: _semiBold(14),
+    // Body
+    bodyLarge: _regular(16),
+    bodyMedium: _regular(14, AppColors.textSecondary),
+    bodySmall: _regular(12, AppColors.textSecondary),
+    // Label
+    labelLarge: _bold(16, Colors.white),
+    labelMedium: _bold(14, Colors.white),
+    labelSmall: _semiBold(12, Colors.white),
+  );
 }

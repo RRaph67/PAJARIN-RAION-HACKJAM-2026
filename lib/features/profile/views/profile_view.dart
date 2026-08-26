@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/router/app_router.dart';
 import '../../../core/models/user_model.dart';
 import '../viewmodels/profile_viewmodel.dart';
 import '../../auth/viewmodels/auth_viewmodel.dart';
@@ -65,8 +66,7 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
         // Isi controller dengan data saat ini
         _nameController.text = user.name;
         _jobTitleController.text = user.jobTitle ?? '';
-        _incomeController.text =
-            user.estimatedIncome?.toStringAsFixed(0) ?? '';
+        _incomeController.text = user.estimatedIncome?.toStringAsFixed(0) ?? '';
       }
     });
   }
@@ -78,7 +78,9 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
 
     final estimatedIncome = double.tryParse(_incomeController.text);
 
-    ref.read(profileViewModelProvider.notifier).updateProfile(
+    ref
+        .read(profileViewModelProvider.notifier)
+        .updateProfile(
           userId: userId,
           name: _nameController.text.trim(),
           jobTitle: _jobTitleController.text.trim().isNotEmpty
@@ -112,7 +114,7 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
 
     if (confirmed == true && mounted) {
       await ref.read(authViewModelProvider.notifier).logout();
-      if (mounted) context.go('/'); // kembali ke splash / auth
+      if (mounted) context.go(AppRoutes.login); // kembali ke halaman login
     }
   }
 
@@ -322,8 +324,14 @@ class _InfoTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
-      title: Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-      subtitle: Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+      title: Text(
+        label,
+        style: const TextStyle(fontSize: 12, color: Colors.grey),
+      ),
+      subtitle: Text(
+        value,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+      ),
       contentPadding: EdgeInsets.zero,
     );
   }

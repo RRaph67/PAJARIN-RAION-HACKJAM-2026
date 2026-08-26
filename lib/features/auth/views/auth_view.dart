@@ -54,7 +54,7 @@ class _AuthViewState extends ConsumerState<AuthView> {
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
-        userType: 'user', // default user type saat register
+        userType: 'candidate', // default user type saat register
       );
     } else {
       authVM.login(
@@ -83,19 +83,14 @@ class _AuthViewState extends ConsumerState<AuthView> {
 
       if (next.status == AuthStatus.error && next.message != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.message!),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(next.message!), backgroundColor: Colors.red),
         );
         ref.read(authViewModelProvider.notifier).resetStatus();
       }
     });
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isRegisterMode ? 'Daftar Akun' : 'Masuk'),
-      ),
+      appBar: AppBar(title: Text(_isRegisterMode ? 'Daftar Akun' : 'Masuk')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Form(
