@@ -15,42 +15,43 @@ import '../../features/auth/views/register_view.dart';
 import '../../features/complete_profile/views/comprof_view.dart';
 import '../../features/onboarding/views/onboarding_intro_view.dart';
 import '../../features/onboarding/views/onboarding_core_view.dart';
+import '../../features/main/views/main_shell_view.dart';
+import '../../features/home/views/jelajahi_pos_view.dart';
+import '../../features/pos/views/pos_detail_view.dart';
 import '../../features/profile/views/profile_view.dart';
+import '../../features/simulasi/views/kalkulator_simulasi_view.dart';
+import '../../features/simulasi/views/simulasi_loading_view.dart';
+import '../../features/simulasi/views/hasil_kalkulator_view.dart';
 
 // ─── Nama/Path Rute ───────────────────────────────────────────────────────────
-// Gunakan konstanta ini saat berpindah halaman agar tidak salah ketik.
-// Contoh: context.go(AppRoutes.home)
 class AppRoutes {
-  AppRoutes._(); // class ini tidak boleh diinstansiasi
+  AppRoutes._();
 
-  static const String splash = '/'; // halaman splash (pertama kali buka app)
-  static const String home = '/home'; // halaman utama
-  static const String login = '/login'; // halaman login
-  static const String register = '/register'; // halaman register
-  static const String linkup = '/linkup'; // halaman lengkapi profil
-  static const String onboardingIntro = '/onboarding-intro'; // halaman pengenalan onboarding
-  static const String onboardingCore = '/onboarding-core'; // halaman core onboarding (3 step)
-  static const String profile = '/profile'; // halaman profil pengguna
-
-  // [PLACEHOLDER] Tambahkan rute sesuai fitur yang dibangun, contoh:
-  // static const String detail   = '/detail/:id'; // rute dinamis dengan parameter
+  static const String splash = '/';
+  static const String home = '/home';
+  static const String login = '/login';
+  static const String register = '/register';
+  static const String linkup = '/linkup';
+  static const String onboardingIntro = '/onboarding-intro';
+  static const String onboardingCore = '/onboarding-core';
+  static const String profile = '/profile';
+  static const String simulasi = '/simulasi';
+  static const String simulasiLoading = '/simulasi/loading';
+  static const String simulasiHasil = '/simulasi/hasil';
+  static const String jelajahiPos = '/home/jelajahi-pos';
+  static const String posDetail = '/home/jelajahi-pos/pos';
 }
 
 // ─── Provider GoRouter ────────────────────────────────────────────────────────
-// GoRouter dibuat sebagai Riverpod Provider agar bisa mengakses state (misal:
-// status login) untuk keperluan redirect/guard navigasi.
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: AppRoutes.splash, // halaman yang pertama dibuka
-    debugLogDiagnostics:
-        true, // cetak log navigasi — nonaktifkan saat production
-    // Auth guard: alihkan pengguna berdasarkan status login
+    initialLocation: AppRoutes.splash,
+    debugLogDiagnostics: true,
     redirect: (context, state) {
       final session = Supabase.instance.client.auth.currentSession;
       final isLoggedIn = session != null;
       final location = state.matchedLocation;
 
-      // Rute yang tidak memerlukan login
       final publicRoutes = [
         AppRoutes.splash,
         AppRoutes.login,
@@ -58,32 +59,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         AppRoutes.linkup,
         AppRoutes.onboardingIntro,
         AppRoutes.onboardingCore,
+        AppRoutes.jelajahiPos,
       ];
       final isPublicRoute = publicRoutes.contains(location);
 
-      // Jika belum login dan bukan di rute publik → arahkan ke login
       if (!isLoggedIn && !isPublicRoute) {
-        return AppRoutes.login;
+        // User tanpa session mencoba akses halaman yang dilindungi.
+        // Terpental ke splash screen, lalu splash arahkan ke login.
+        return AppRoutes.splash;
       }
 
-      // Tidak ada pengalihan
       return null;
     },
     routes: [
       // ── Splash Screen ────────────────────────────────────────────────
-      // Halaman pertama yang muncul saat aplikasi dibuka.
       GoRoute(
         path: AppRoutes.splash,
         name: 'splash',
         builder: (context, state) => const SplashView(),
-      ),
-
-      // ── Home Screen ──────────────────────────────────────────────────
-      // Halaman utama aplikasi setelah splash selesai.
-      GoRoute(
-        path: AppRoutes.home,
-        name: 'home',
-        builder: (context, state) => const HomeView(),
       ),
 
       // ── Login Screen ──────────────────────────────────────────────────
@@ -93,50 +86,129 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const LoginView(),
       ),
 
-      // ── Register Screen ────────────────────────────────────────────────
+      // ── Register Screen ───────────────────────────────────────────────
       GoRoute(
         path: AppRoutes.register,
         name: 'register',
         builder: (context, state) => const RegisterView(),
       ),
 
-      // ── Linkup Screen ──────────────────────────────────────────────
+      // ── Linkup Screen ─────────────────────────────────────────────────
       GoRoute(
         path: AppRoutes.linkup,
         name: 'linkup',
         builder: (context, state) => const LinkupView(),
       ),
 
-      // ── Onboarding Intro Screen ──────────────────────────────────
+      // ── Onboarding Intro Screen ───────────────────────────────────────
       GoRoute(
         path: AppRoutes.onboardingIntro,
         name: 'onboarding-intro',
         builder: (context, state) => const OnboardingIntroView(),
       ),
 
-      // ── Onboarding Core Screen ───────────────────────────────────
+      // ── Onboarding Core Screen ────────────────────────────────────────
       GoRoute(
         path: AppRoutes.onboardingCore,
         name: 'onboarding-core',
         builder: (context, state) => const OnboardingCoreView(),
       ),
 
-      // ── Profile Screen ────────────────────────────────────────────────
-      // Halaman profil pengguna — lihat, edit, dan update data profil.
+      // ── Simulasi Loading Screen ──────────────────────────────────────
       GoRoute(
-        path: AppRoutes.profile,
-        name: 'profile',
-        builder: (context, state) => const ProfileView(),
+        path: AppRoutes.simulasiLoading,
+        name: 'simulasi-loading',
+        builder: (context, state) {
+          final data = state.extra as Map<String, dynamic>? ?? {};
+          return SimulasiLoadingView(
+            gaji: (data['gaji'] as num?)?.toDouble() ?? 0,
+            ptkp: data['ptkp'] as String? ?? '',
+            tanggungan: data['tanggungan'] as int? ?? 0,
+          );
+        },
+      ),
+
+      // ── Simulasi Hasil Screen ─────────────────────────────────────────
+      GoRoute(
+        path: AppRoutes.simulasiHasil,
+        name: 'simulasi-hasil',
+        builder: (context, state) {
+          final data = state.extra as Map<String, dynamic>? ?? {};
+          return HasilKalkulatorView(
+            gaji: (data['gaji'] as num?)?.toDouble() ?? 0,
+            ptkp: data['ptkp'] as String? ?? '',
+            tanggungan: data['tanggungan'] as int? ?? 0,
+          );
+        },
+      ),
+
+      // ── Main Shell (Bottom Navbar) ────────────────────────────────────
+      // StatefulShellRoute mempertahankan state per tab (tidak rebuild
+      // saat berpindah tab) — persis seperti mobile app pada umumnya.
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return MainShellView(navigationShell: navigationShell);
+        },
+        branches: [
+          // ── Tab 1: Beranda ──────────────────────────────────────────
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.home,
+                name: 'home',
+                builder: (context, state) => const HomeView(),
+                routes: [
+                  GoRoute(
+                    path: 'jelajahi-pos',
+                    name: 'jelajahi-pos',
+                    builder: (context, state) => const JelajahiPosView(),
+                    routes: [
+                      GoRoute(
+                        path: 'pos/:posId',
+                        name: 'pos-detail',
+                        builder: (context, state) {
+                          final posId = int.parse(
+                            state.pathParameters['posId']!,
+                          );
+                          return PosDetailView(posId: posId);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // ── Tab 2: Simulasi ─────────────────────────────────────────
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.simulasi,
+                name: 'simulasi',
+                builder: (context, state) => const KalkulatorSimulasiView(),
+              ),
+            ],
+          ),
+
+          // ── Tab 3: Profile ──────────────────────────────────────────
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.profile,
+                name: 'profile',
+                builder: (context, state) => const ProfileView(),
+              ),
+            ],
+          ),
+        ],
       ),
     ],
-
-    // Halaman yang ditampilkan jika rute tidak ditemukan (404)
     errorBuilder: (context, state) => _RouterErrorView(error: state.error),
   );
 });
 
 // ─── Halaman Error 404 ────────────────────────────────────────────────────────
-// Ditampilkan otomatis oleh GoRouter jika pengguna membuka rute yang tidak ada.
 class _RouterErrorView extends StatelessWidget {
   final Exception? error;
   const _RouterErrorView({this.error});

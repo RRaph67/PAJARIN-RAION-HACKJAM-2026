@@ -200,7 +200,7 @@ class _OnboardingCoreViewState extends State<OnboardingCoreView> {
                   Expanded(
                     child: AppButton(
                       label: _currentStep == _totalSteps - 1
-                          ? 'Selesai'
+                          ? 'Mulai Belajar'
                           : 'Selanjutnya',
                       onPressed: _nextStep,
                     ),

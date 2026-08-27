@@ -31,7 +31,6 @@ class _LinkupViewState extends ConsumerState<LinkupView> {
   final _nameController = TextEditingController();
   final _jobController = TextEditingController();
   final _incomeController = TextEditingController();
-  final _taxLevelController = TextEditingController();
 
   // ── Opsi Dropdown ──────────────────────────────────────────────
   static const List<String> _jobOptions = [
@@ -51,18 +50,12 @@ class _LinkupViewState extends ConsumerState<LinkupView> {
     '> Rp 20 juta',
   ];
 
-  static const List<String> _taxLevelOptions = [
-    'Belum Paham',
-    'Cukup Paham',
-    'Sudah Paham',
-  ];
-
   @override
   void dispose() {
     _nameController.dispose();
     _jobController.dispose();
     _incomeController.dispose();
-    _taxLevelController.dispose();
+
     super.dispose();
   }
 
@@ -71,7 +64,7 @@ class _LinkupViewState extends ConsumerState<LinkupView> {
       _nameController.text.trim().isNotEmpty &&
       _jobController.text.isNotEmpty &&
       _incomeController.text.isNotEmpty &&
-      _taxLevelController.text.isNotEmpty;
+      true;
 
   void _onFieldChanged(_) {
     setState(() {});
@@ -219,7 +212,6 @@ class _LinkupViewState extends ConsumerState<LinkupView> {
           name: _nameController.text.trim(),
           jobTitle: _jobController.text,
           estimatedIncome: _parseIncome(_incomeController.text),
-          taxUnderstandingLevel: _taxLevelController.text,
         );
   }
 
@@ -379,31 +371,6 @@ class _LinkupViewState extends ConsumerState<LinkupView> {
                           ),
                         ),
                         const SizedBox(height: 12),
-
-                        // Tingkat Pemahaman Pajak (pilih via popup)
-                        AppTextField(
-                          controller: _taxLevelController,
-                          hintText: 'Tingkat Pemahaman Pajak',
-                          prefixIcon: Icons.psychology_outlined,
-                          readOnly: true,
-                          showCursor: false,
-                          trailing: const Icon(
-                            Icons.keyboard_arrow_down,
-                            size: 24,
-                            color: AppColors.orange950,
-                          ),
-                          validator: (value) => value == null || value.isEmpty
-                              ? 'Tingkat pemahaman wajib dipilih'
-                              : null,
-                          onTap: () => _openSelectSheet(
-                            title: 'Tingkat Pemahaman Pajak',
-                            options: _taxLevelOptions,
-                            currentValue: _taxLevelController.text,
-                            onSelect: (value) => setState(
-                              () => _taxLevelController.text = value,
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                   ],

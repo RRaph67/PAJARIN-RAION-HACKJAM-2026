@@ -1,6 +1,6 @@
 // =============================================================================
 // profile_view.dart
-// Halaman profil user — menampilkan data dari tabel `users` Supabase.
+// Konten halaman profil user — menampilkan data dari tabel `users` Supabase.
 // Memungkinkan user melihat dan mengupdate profil mereka.
 // =============================================================================
 
@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/models/user_model.dart';
+import '../../../core/theme/app_colors.dart';
 import '../viewmodels/profile_viewmodel.dart';
 import '../../auth/viewmodels/auth_viewmodel.dart';
 
@@ -21,10 +22,8 @@ class ProfileView extends ConsumerStatefulWidget {
 }
 
 class _ProfileViewState extends ConsumerState<ProfileView> {
-  // ── State untuk mode edit ────────────────────────────────────────────────
   bool _isEditing = false;
 
-  // ── Controller untuk field edit ─────────────────────────────────────────
   late TextEditingController _nameController;
   late TextEditingController _jobTitleController;
   late TextEditingController _incomeController;
@@ -36,7 +35,6 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
     _jobTitleController = TextEditingController();
     _incomeController = TextEditingController();
 
-    // Ambil profil saat halaman pertama kali dibuka
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadProfile();
     });
@@ -50,7 +48,6 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
     super.dispose();
   }
 
-  // ─── Load Profil dari Supabase ──────────────────────────────────────────
   void _loadProfile() {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId != null) {
@@ -58,12 +55,10 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
     }
   }
 
-  // ─── Toggle Mode Edit ──────────────────────────────────────────────────
   void _toggleEdit(UserModel user) {
     setState(() {
       _isEditing = !_isEditing;
       if (_isEditing) {
-        // Isi controller dengan data saat ini
         _nameController.text = user.name;
         _jobTitleController.text = user.jobTitle ?? '';
         _incomeController.text = user.estimatedIncome?.toStringAsFixed(0) ?? '';
@@ -71,7 +66,6 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
     });
   }
 
-  // ─── Simpan Perubahan ──────────────────────────────────────────────────
   void _saveProfile() {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) return;
@@ -92,7 +86,6 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
     setState(() => _isEditing = false);
   }
 
-  // ─── Logout ────────────────────────────────────────────────────────────
   Future<void> _logout() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -114,7 +107,7 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
 
     if (confirmed == true && mounted) {
       await ref.read(authViewModelProvider.notifier).logout();
-      if (mounted) context.go(AppRoutes.login); // kembali ke halaman login
+      if (mounted) context.go(AppRoutes.splash);
     }
   }
 
@@ -122,7 +115,6 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
   Widget build(BuildContext context) {
     final profileState = ref.watch(profileViewModelProvider);
 
-    // Tampilkan pesan error atau sukses
     ref.listen<ProfileState>(profileViewModelProvider, (previous, next) {
       if (next.message != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -137,31 +129,39 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
       }
     });
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profil Saya'),
-        actions: [
-          // Tombol Logout
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
-            tooltip: 'Keluar',
+    return Column(
+      children: [
+        // ── Header ─────────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Profil Saya',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                icon: const Icon(Icons.logout),
+                onPressed: _logout,
+                tooltip: 'Keluar',
+              ),
+            ],
           ),
-        ],
-      ),
-      body: _buildBody(profileState),
+        ),
+
+        // ── Body ───────────────────────────────────────────────────
+        Expanded(child: _buildBody(profileState)),
+      ],
     );
   }
 
-  // ─── Build Body ─────────────────────────────────────────────────────────
   Widget _buildBody(ProfileState profileState) {
-    // Loading
     if (profileState.status == ProfileStatus.loading &&
         profileState.user == null) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    // Error tanpa data
     if (profileState.status == ProfileStatus.error &&
         profileState.user == null) {
       return Center(
@@ -190,11 +190,10 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          // ── Avatar & Nama ─────────────────────────────────────────────
           const SizedBox(height: 16),
           CircleAvatar(
             radius: 48,
-            backgroundColor: Theme.of(context).colorScheme.primary,
+            backgroundColor: AppColors.orange500,
             child: Text(
               user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
               style: const TextStyle(
@@ -217,13 +216,8 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
           const SizedBox(height: 24),
           const Divider(),
           const SizedBox(height: 16),
-
-          // ── Detail Profil ─────────────────────────────────────────────
           _isEditing ? _buildEditMode(user) : _buildDisplayMode(user),
-
           const SizedBox(height: 24),
-
-          // ── Tombol Edit / Simpan ──────────────────────────────────────
           if (_isEditing) ...[
             ElevatedButton.icon(
               onPressed: _saveProfile,
@@ -247,7 +241,6 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
     );
   }
 
-  // ─── Mode Tampilan (Read-only) ──────────────────────────────────────────
   Widget _buildDisplayMode(UserModel user) {
     return Column(
       children: [
@@ -274,7 +267,6 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
     );
   }
 
-  // ─── Mode Edit ──────────────────────────────────────────────────────────
   Widget _buildEditMode(UserModel user) {
     return Column(
       children: [
@@ -307,8 +299,6 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
   }
 }
 
-// ─── Widget Helper: InfoTile ─────────────────────────────────────────────────
-// Menampilkan satu baris informasi (ikon + label + nilai).
 class _InfoTile extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -323,7 +313,7 @@ class _InfoTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
+      leading: Icon(icon, color: AppColors.orange500),
       title: Text(
         label,
         style: const TextStyle(fontSize: 12, color: Colors.grey),

@@ -30,7 +30,6 @@ class LinkupViewModel extends StateNotifier<LinkupState> {
     required String name,
     required String jobTitle,
     required double estimatedIncome,
-    required String taxUnderstandingLevel,
   }) async {
     state = const LinkupState(status: LinkupStatus.loading);
 
@@ -40,7 +39,6 @@ class LinkupViewModel extends StateNotifier<LinkupState> {
         name: name,
         jobTitle: jobTitle,
         estimatedIncome: estimatedIncome,
-        taxUnderstandingLevel: taxUnderstandingLevel,
       );
 
       state = const LinkupState(

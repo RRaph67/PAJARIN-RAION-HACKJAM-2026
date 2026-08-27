@@ -22,18 +22,10 @@ class AuthState {
   final String? message;
   final UserModel? user;
 
-  const AuthState({
-    this.status = AuthStatus.idle,
-    this.message,
-    this.user,
-  });
+  const AuthState({this.status = AuthStatus.idle, this.message, this.user});
 
   // Buat salinan dengan perubahan sebagian field.
-  AuthState copyWith({
-    AuthStatus? status,
-    String? message,
-    UserModel? user,
-  }) {
+  AuthState copyWith({AuthStatus? status, String? message, UserModel? user}) {
     return AuthState(
       status: status ?? this.status,
       message: message,
@@ -50,9 +42,28 @@ class AuthViewModel extends StateNotifier<AuthState> {
   AuthViewModel({
     required AuthRepository authRepository,
     required ProfileRepository profileRepository,
-  })  : _authRepository = authRepository,
-        _profileRepository = profileRepository,
-        super(const AuthState());
+  }) : _authRepository = authRepository,
+       _profileRepository = profileRepository,
+       super(const AuthState()) {
+    // Auto-load profile jika session sudah ada (app restart)
+    _loadProfileOnStartup();
+  }
+
+  /// Load profil dari session aktif saat app pertama kali dibuka.
+  /// Ini memastikan data user tersedia sebelum navigasi ke home.
+  Future<void> _loadProfileOnStartup() async {
+    final userId = _authRepository.currentUser?.id;
+    if (userId == null) return;
+
+    try {
+      final profile = await _profileRepository.getProfile(userId);
+      state = state.copyWith(status: AuthStatus.success, user: profile);
+    } catch (e) {
+      // Profil belum ada di tabel users (belum complete profile)
+      // atau error lainnya — tetap set status success agar app bisa jalan
+      state = state.copyWith(status: AuthStatus.success);
+    }
+  }
 
   // ─── Register ────────────────────────────────────────────────────────────
   // 1. Buat akun di Supabase Auth
@@ -63,10 +74,7 @@ class AuthViewModel extends StateNotifier<AuthState> {
     required String password,
     required String userType,
   }) async {
-    state = state.copyWith(
-      status: AuthStatus.loading,
-      message: null,
-    );
+    state = state.copyWith(status: AuthStatus.loading, message: null);
 
     try {
       // Langkah 1: Buat akun di Supabase Auth
@@ -98,15 +106,9 @@ class AuthViewModel extends StateNotifier<AuthState> {
         user: profile,
       );
     } on AuthRepositoryException catch (e) {
-      state = state.copyWith(
-        status: AuthStatus.error,
-        message: e.message,
-      );
+      state = state.copyWith(status: AuthStatus.error, message: e.message);
     } on ProfileRepositoryException catch (e) {
-      state = state.copyWith(
-        status: AuthStatus.error,
-        message: e.message,
-      );
+      state = state.copyWith(status: AuthStatus.error, message: e.message);
     } catch (e) {
       state = state.copyWith(
         status: AuthStatus.error,
@@ -117,15 +119,9 @@ class AuthViewModel extends StateNotifier<AuthState> {
 
   // ─── Login ───────────────────────────────────────────────────────────────
   // 1. Login ke Supabase Auth
-  // 2. Ambil data profil dari tabel `users`
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
-    state = state.copyWith(
-      status: AuthStatus.loading,
-      message: null,
-    );
+  // 2. Ambil data profil dari tabel `users` (jika ada)
+  Future<void> login({required String email, required String password}) async {
+    state = state.copyWith(status: AuthStatus.loading, message: null);
 
     try {
       // Langkah 1: Login ke Supabase Auth
@@ -143,24 +139,16 @@ class AuthViewModel extends StateNotifier<AuthState> {
         return;
       }
 
-      // Langkah 2: Ambil profil dari tabel `users`
-      final profile = await _profileRepository.getProfile(userId);
-
-      state = state.copyWith(
-        status: AuthStatus.success,
-        message: 'Login berhasil!',
-        user: profile,
-      );
+      // Langkah 2: Ambil profil dari tabel `users` (jika ada)
+      try {
+        final profile = await _profileRepository.getProfile(userId);
+        state = state.copyWith(status: AuthStatus.success, user: profile);
+      } catch (_) {
+        // Profil belum ada di tabel users — user tetap bisa lanjut
+        state = state.copyWith(status: AuthStatus.success);
+      }
     } on AuthRepositoryException catch (e) {
-      state = state.copyWith(
-        status: AuthStatus.error,
-        message: e.message,
-      );
-    } on ProfileRepositoryException catch (e) {
-      state = state.copyWith(
-        status: AuthStatus.error,
-        message: e.message,
-      );
+      state = state.copyWith(status: AuthStatus.error, message: e.message);
     } catch (e) {
       state = state.copyWith(
         status: AuthStatus.error,
@@ -177,10 +165,7 @@ class AuthViewModel extends StateNotifier<AuthState> {
       await _authRepository.logout();
       state = const AuthState(); // reset ke idle
     } on AuthRepositoryException catch (e) {
-      state = state.copyWith(
-        status: AuthStatus.error,
-        message: e.message,
-      );
+      state = state.copyWith(status: AuthStatus.error, message: e.message);
     }
   }
 
@@ -200,8 +185,9 @@ final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   return ProfileRepository();
 });
 
-final authViewModelProvider =
-    StateNotifierProvider<AuthViewModel, AuthState>((ref) {
+final authViewModelProvider = StateNotifierProvider<AuthViewModel, AuthState>((
+  ref,
+) {
   return AuthViewModel(
     authRepository: ref.watch(authRepositoryProvider),
     profileRepository: ref.watch(profileRepositoryProvider),

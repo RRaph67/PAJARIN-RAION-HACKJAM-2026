@@ -50,7 +50,7 @@ class _SplashViewState extends ConsumerState<SplashView>
     _logoFadeOut = Tween<double>(begin: 1.0, end: 0.0).animate(
       CurvedAnimation(
         parent: _animController,
-        curve: const Interval(0.75, 1.0, curve: Curves.easeOut),
+        curve: const Interval(0.85, 1.0, curve: Curves.easeOut),
       ),
     );
 
@@ -65,10 +65,11 @@ class _SplashViewState extends ConsumerState<SplashView>
 
   void _navigateNext() {
     final session = Supabase.instance.client.auth.currentSession;
-
     if (session != null) {
+      // Session aktif → langsung ke home (profile sudah di-load AuthViewModel)
       context.go(AppRoutes.home);
     } else {
+      // Tidak ada session → ke login/register
       context.go(AppRoutes.login);
     }
   }

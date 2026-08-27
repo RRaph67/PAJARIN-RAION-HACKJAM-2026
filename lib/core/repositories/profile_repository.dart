@@ -69,7 +69,6 @@ class ProfileRepository {
     String? userType,
     String? jobTitle,
     double? estimatedIncome,
-    String? taxUnderstandingLevel,
   }) async {
     try {
       // Bangun map hanya berisi field yang ingin diupdate (selain null).
@@ -78,9 +77,6 @@ class ProfileRepository {
       if (userType != null) data['user_type'] = userType;
       if (jobTitle != null) data['job_title'] = jobTitle;
       if (estimatedIncome != null) data['estimated_income'] = estimatedIncome;
-      if (taxUnderstandingLevel != null) {
-        data['tax_understanding_level'] = taxUnderstandingLevel;
-      }
 
       if (data.isEmpty) {
         return await getProfile(userId);
