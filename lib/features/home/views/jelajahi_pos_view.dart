@@ -3,7 +3,7 @@
 // Halaman Jelajahi Pos — carousel 3 pos dengan navigasi arrow & content dinamis.
 // Flow: Home → Jelajahi Pos (intro carousel) → pos detail (selanjutnya).
 // Bottom navbar di-handle oleh MainShellView (shell route) — Beranda aktif.
-// Layout: FrameAtas + Spacer(auto) + FrameBawah + 8px bottom.
+// Layout: Column → Expanded(SingleChildScrollView) + Button.
 // Status chip & button menyesuaikan progress user dari Supabase.
 // Data pos & status mapping dipisahkan ke pos_data_model.dart.
 // =============================================================================
@@ -71,148 +71,157 @@ class _JelajahiPosViewState extends ConsumerState<JelajahiPosView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ════════════════════════════════════════════════════════════
-          // FRAME ATAS
-          // ════════════════════════════════════════════════════════════
-
-          // ── Top Bar: Back Button + Info Pos ─────────────────────
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Pos ${pos.number} - ${pos.moduleName}',
-                  style: AppTypography.titleLargeBold.copyWith(
-                    color: AppColors.orange900,
+          // ══════════════════════════════════════════════════════════
+          // SCROLLABLE CONTENT
+          // ══════════════════════════════════════════════════════════
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Top Bar: Pos Info + Status Chip ─────────────
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Pos ${pos.number} - ${pos.moduleName}',
+                          style: AppTypography.titleLargeBold.copyWith(
+                            color: AppColors.orange900,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      AppStatusChip(
+                        variant: uiConfig.chipVariant,
+                        label: uiConfig.chipLabel,
+                      ),
+                    ],
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 8),
-              AppStatusChip(
-                variant: uiConfig.chipVariant,
-                label: uiConfig.chipLabel,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-          // ── Title Frame ─────────────────────────────────────────
-          Text(
-            pos.title,
-            style: AppTypography.displaySmallExtraBold.copyWith(
-              color: AppColors.orange900,
-            ),
-            textAlign: TextAlign.left,
-          ),
-          const SizedBox(height: 48),
-
-          // ── Carousel + Arrow Navigation ─────────────────────────
-          SizedBox(
-            height: 227,
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => _goToPage(_currentPage - 1),
-                  child: Icon(
-                    Icons.arrow_back_ios_new,
-                    size: 24,
-                    color: _currentPage == 0
-                        ? AppColors.orange200
-                        : AppColors.orange900,
+                  // ── Title Frame ─────────────────────────────────
+                  Text(
+                    pos.title,
+                    style: AppTypography.displaySmallExtraBold.copyWith(
+                      color: AppColors.orange900,
+                    ),
+                    textAlign: TextAlign.left,
                   ),
-                ),
-                const SizedBox(width: 0),
-                Expanded(
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: posListData.length,
-                    onPageChanged: _onPageChanged,
-                    itemBuilder: (context, index) {
-                      final item = posListData[index];
-                      return Center(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(30),
-                          child: SvgPicture.asset(
-                            item.imagePath,
-                            width: 383,
-                            height: 277,
-                            fit: BoxFit.cover,
+                  const SizedBox(height: 48),
+
+                  // ── Carousel + Arrow Navigation ─────────────────
+                  SizedBox(
+                    height: 227,
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => _goToPage(_currentPage - 1),
+                          child: Icon(
+                            Icons.arrow_back_ios_new,
+                            size: 24,
+                            color: _currentPage == 0
+                                ? AppColors.orange200
+                                : AppColors.orange900,
                           ),
                         ),
-                      );
-                    },
+                        const SizedBox(width: 0),
+                        Expanded(
+                          child: PageView.builder(
+                            controller: _pageController,
+                            itemCount: posListData.length,
+                            onPageChanged: _onPageChanged,
+                            itemBuilder: (context, index) {
+                              final item = posListData[index];
+                              return Center(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(30),
+                                  child: SvgPicture.asset(
+                                    item.imagePath,
+                                    width: 383,
+                                    height: 277,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 0),
+                        GestureDetector(
+                          onTap: () => _goToPage(_currentPage + 1),
+                          child: Icon(
+                            Icons.arrow_forward_ios,
+                            size: 24,
+                            color: _currentPage == posListData.length - 1
+                                ? AppColors.orange200
+                                : AppColors.orange900,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 0),
-                GestureDetector(
-                  onTap: () => _goToPage(_currentPage + 1),
-                  child: Icon(
-                    Icons.arrow_forward_ios,
-                    size: 24,
-                    color: _currentPage == posListData.length - 1
-                        ? AppColors.orange200
-                        : AppColors.orange900,
+                  const SizedBox(height: 32),
+
+                  // ── Pagination (Level Bar — flexible width) ─────
+                  Center(
+                    child: AppLevelBar(
+                      activeSteps: _currentPage + 1,
+                      totalSteps: posListData.length,
+                      activeColor: AppColors.orange800,
+                      inactiveColor: AppColors.orange100,
+                      highlightCurrentOnly: true,
+                      stepWidth: 96,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 32),
+                  const SizedBox(height: 32),
 
-          // ── Pagination (Level Bar) ──────────────────────────────
-          Center(
-            child: AppLevelBar(
-              activeSteps: _currentPage + 1,
-              totalSteps: posListData.length,
-              activeColor: AppColors.orange800,
-              inactiveColor: AppColors.orange100,
-              highlightCurrentOnly: true,
-            ),
-          ),
+                  // ── Tentang Pos (truncated 3 baris) ────────────
+                  Text(
+                    'Tentang Pos',
+                    style: AppTypography.titleLargeBold.copyWith(
+                      color: AppColors.orange950,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                  const SizedBox(height: 12),
 
-          // ══════════════════════════════════════════════════════════
-          // SPACER — Auto gap antara FrameAtas & FrameBawah
-          // ══════════════════════════════════════════════════════════
-          const Spacer(),
-
-          // ══════════════════════════════════════════════════════════
-          // FRAME BAWAH — Tentang Pos
-          // ══════════════════════════════════════════════════════════
-          Text(
-            'Tentang Pos',
-            style: AppTypography.titleLargeBold.copyWith(
-              color: AppColors.orange950,
-            ),
-            textAlign: TextAlign.left,
-          ),
-          const SizedBox(height: 12),
-
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-            decoration: BoxDecoration(
-              color: AppColors.orange200,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              pos.description,
-              style: AppTypography.bodyMediumRegular.copyWith(
-                color: AppColors.orange950,
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.orange200,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      pos.description,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodyMediumRegular.copyWith(
+                        color: AppColors.orange950,
+                      ),
+                      textAlign: TextAlign.left,
+                    ),
+                  ),
+                ],
               ),
-              textAlign: TextAlign.left,
             ),
           ),
-          const SizedBox(height: 16),
 
+          // ══════════════════════════════════════════════════════════
+          // BUTTON — Always visible at bottom
+          // ══════════════════════════════════════════════════════════
+          const SizedBox(height: 16),
           AppButton(
             label: uiConfig.buttonLabel,
             variant: uiConfig.buttonVariant,
             width: double.infinity,
             height: 64,
             onPressed: () {
-              // ── Navigasi ke loading screen, lalu ke detail ────────
-              context.go('${AppRoutes.jelajahiPos}/pos-loading/${pos.number}');
+              context.go(
+                '${AppRoutes.jelajahiPos}/pos-loading/${pos.number}',
+              );
             },
           ),
         ],
