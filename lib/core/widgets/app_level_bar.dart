@@ -32,7 +32,7 @@ class AppLevelBar extends StatelessWidget {
   const AppLevelBar({
     super.key,
     required this.activeSteps,
-    this.stepWidth = 115,
+    this.stepWidth = 88,
     this.stepHeight = 10,
     this.activeColor = AppColors.orange800,
     this.inactiveColor = AppColors.orange100,
