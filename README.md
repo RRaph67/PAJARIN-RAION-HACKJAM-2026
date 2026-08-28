@@ -35,7 +35,7 @@
 | Item | Details |
 | --- | --- |
 | Application Type | Mobile (Cross-platform) |
-| Primary Platform | Android & iOS |
+| Primary Platform | Android |
 
 Pajarin adalah aplikasi edukasi pajak yang dirancang untuk membantu generasi muda Indonesia memahami kewajiban perpajakan mereka. Banyak karyawan baru, freelancer, dan pelajar tidak memahami bagaimana pajak penghasilan (PPh 21) bekerja, apa itu PTKP, atau cara melaporkan SPT Tahunan. Pajarin mengatasi masalah ini dengan pendekatan belajar interaktif berbasis "pos" pembelajaran, simulasi kalkulator pajak, dan panduan visual menggunakan maskot lucu yang menemani perjalanan belajar pengguna.
 
