@@ -13,7 +13,6 @@
   <br />
 
   ![Platform](https://img.shields.io/badge/Platform-Android-4A90E2?style=for-the-badge)
-  ![Platform](https://img.shields.io/badge/Platform-iOS-4A90E2?style=for-the-badge)
   ![Framework](https://img.shields.io/badge/Framework-Flutter-02569B?style=for-the-badge)
   ![Backend](https://img.shields.io/badge/Backend-Supabase-3FCF8E?style=for-the-badge)
 
