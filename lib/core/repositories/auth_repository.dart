@@ -5,8 +5,11 @@
 // =============================================================================
 
 import 'dart:async';
+import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../main.dart' show supabase;
+import '../constants/app_constants.dart';
+import '../utils/network_checker.dart';
 
 class AuthRepository {
   // ── Access Supabase Auth ─────────────────────────────────────────────────
@@ -29,13 +32,33 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
+    // Cek koneksi sebelum request
+    final hasConnection = await NetworkChecker.hasSupabaseConnection(
+      AppConstants.supabaseUrl,
+    );
+    if (!hasConnection) {
+      throw AuthRepositoryException(
+        'Tidak dapat terhubung ke server. Pastikan koneksi internet aktif.',
+      );
+    }
+
     try {
       final response = await _auth.signUp(email: email, password: password);
       return response;
     } on AuthException catch (e) {
       throw AuthRepositoryException(e.message);
+    } on SocketException catch (e) {
+      throw AuthRepositoryException(
+        NetworkChecker.getFriendlyMessage(e),
+      );
+    } on TimeoutException catch (_) {
+      throw AuthRepositoryException(
+        'Koneksi ke server timeout. Silakan coba lagi.',
+      );
     } catch (e) {
-      throw AuthRepositoryException('Terjadi kesalahan saat mendaftar: $e');
+      throw AuthRepositoryException(
+        NetworkChecker.getFriendlyMessage(e),
+      );
     }
   }
 
@@ -45,6 +68,16 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
+    // Cek koneksi sebelum request
+    final hasConnection = await NetworkChecker.hasSupabaseConnection(
+      AppConstants.supabaseUrl,
+    );
+    if (!hasConnection) {
+      throw AuthRepositoryException(
+        'Tidak dapat terhubung ke server. Pastikan koneksi internet aktif.',
+      );
+    }
+
     try {
       final response = await _auth.signInWithPassword(
         email: email,
@@ -53,8 +86,18 @@ class AuthRepository {
       return response;
     } on AuthException catch (e) {
       throw AuthRepositoryException(e.message);
+    } on SocketException catch (e) {
+      throw AuthRepositoryException(
+        NetworkChecker.getFriendlyMessage(e),
+      );
+    } on TimeoutException catch (_) {
+      throw AuthRepositoryException(
+        'Koneksi ke server timeout. Silakan coba lagi.',
+      );
     } catch (e) {
-      throw AuthRepositoryException('Terjadi kesalahan saat login: $e');
+      throw AuthRepositoryException(
+        NetworkChecker.getFriendlyMessage(e),
+      );
     }
   }
 

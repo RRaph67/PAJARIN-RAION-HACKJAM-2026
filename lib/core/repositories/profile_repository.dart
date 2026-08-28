@@ -4,7 +4,10 @@
 // Menangani: ambil profil, update profil, dan cek apakah profil sudah ada.
 // =============================================================================
 
+import 'dart:io';
 import '../models/user_model.dart';
+import '../constants/app_constants.dart';
+import '../utils/network_checker.dart';
 import '../../main.dart' show supabase;
 
 class ProfileRepository {
@@ -15,6 +18,15 @@ class ProfileRepository {
   // ─── Ambil profil user berdasarkan ID ────────────────────────────────────
   // Mengambil satu baris data dari tabel users berdasarkan auth user ID.
   Future<UserModel> getProfile(String userId) async {
+    final hasConn = await NetworkChecker.hasSupabaseConnection(
+      AppConstants.supabaseUrl,
+    );
+    if (!hasConn) {
+      throw ProfileRepositoryException(
+        'Tidak dapat terhubung ke server. Pastikan koneksi internet aktif.',
+      );
+    }
+
     try {
       final response = await supabase
           .from(_tableName)
@@ -23,8 +35,14 @@ class ProfileRepository {
           .single();
 
       return UserModel.fromJson(response);
+    } on SocketException catch (e) {
+      throw ProfileRepositoryException(
+        NetworkChecker.getFriendlyMessage(e),
+      );
     } catch (e) {
-      throw ProfileRepositoryException('Gagal mengambil data profil: $e');
+      throw ProfileRepositoryException(
+        NetworkChecker.getFriendlyMessage(e),
+      );
     }
   }
 
@@ -39,6 +57,15 @@ class ProfileRepository {
     String? jobTitle,
     double? estimatedIncome,
   }) async {
+    final hasConn = await NetworkChecker.hasSupabaseConnection(
+      AppConstants.supabaseUrl,
+    );
+    if (!hasConn) {
+      throw ProfileRepositoryException(
+        'Tidak dapat terhubung ke server. Pastikan koneksi internet aktif.',
+      );
+    }
+
     try {
       final data = {
         'id': userId,
@@ -56,8 +83,14 @@ class ProfileRepository {
           .single();
 
       return UserModel.fromJson(response);
+    } on SocketException catch (e) {
+      throw ProfileRepositoryException(
+        NetworkChecker.getFriendlyMessage(e),
+      );
     } catch (e) {
-      throw ProfileRepositoryException('Gagal membuat profil: $e');
+      throw ProfileRepositoryException(
+        NetworkChecker.getFriendlyMessage(e),
+      );
     }
   }
 
@@ -70,6 +103,15 @@ class ProfileRepository {
     String? jobTitle,
     double? estimatedIncome,
   }) async {
+    final hasConn = await NetworkChecker.hasSupabaseConnection(
+      AppConstants.supabaseUrl,
+    );
+    if (!hasConn) {
+      throw ProfileRepositoryException(
+        'Tidak dapat terhubung ke server. Pastikan koneksi internet aktif.',
+      );
+    }
+
     try {
       // Bangun map hanya berisi field yang ingin diupdate (selain null).
       final data = <String, dynamic>{};
@@ -90,8 +132,14 @@ class ProfileRepository {
           .single();
 
       return UserModel.fromJson(response);
+    } on SocketException catch (e) {
+      throw ProfileRepositoryException(
+        NetworkChecker.getFriendlyMessage(e),
+      );
     } catch (e) {
-      throw ProfileRepositoryException('Gagal memperbarui profil: $e');
+      throw ProfileRepositoryException(
+        NetworkChecker.getFriendlyMessage(e),
+      );
     }
   }
 
