@@ -1,6 +1,6 @@
 // =============================================================================
 // app_router.dart
-// Konfigurasi navigasi menggunakan GoRouter untuk RaionHackJam15.
+// Konfigurasi navigasi menggunakan GoRouter untuk Pajarin.
 // Ikuti pola Feature-First: tambahkan rute baru di bagian fitur masing-masing.
 // =============================================================================
 
@@ -18,10 +18,16 @@ import '../../features/onboarding/views/onboarding_core_view.dart';
 import '../../features/main/views/main_shell_view.dart';
 import '../../features/home/views/jelajahi_pos_view.dart';
 import '../../features/pos/views/pos_detail_view.dart';
+import '../../features/pos/views/pos_loading_view.dart';
 import '../../features/profile/views/profile_view.dart';
 import '../../features/simulasi/views/kalkulator_simulasi_view.dart';
 import '../../features/simulasi/views/simulasi_loading_view.dart';
 import '../../features/simulasi/views/hasil_kalkulator_view.dart';
+import '../../features/profile/views/faq_pajak_view.dart';
+import '../../features/profile/views/coretax_checklist_view.dart';
+import '../../features/profile/views/apa_itu_coretax_view.dart';
+import '../../features/profile/views/change_password_view.dart';
+import '../../features/profile/views/edit_profile_view.dart';
 
 // ─── Nama/Path Rute ───────────────────────────────────────────────────────────
 class AppRoutes {
@@ -40,6 +46,12 @@ class AppRoutes {
   static const String simulasiHasil = '/simulasi/hasil';
   static const String jelajahiPos = '/home/jelajahi-pos';
   static const String posDetail = '/home/jelajahi-pos/pos';
+  static const String posLoading = '/home/jelajahi-pos/pos-loading';
+  static const String faqPajak = '/profile/faq-pajak';
+  static const String coretaxChecklist = '/profile/coretax-checklist';
+  static const String apaItuCoretax = '/profile/apa-itu-coretax';
+  static const String changePassword = '/profile/change-password';
+  static const String editProfile = '/profile/edit-profile';
 }
 
 // ─── Provider GoRouter ────────────────────────────────────────────────────────
@@ -128,6 +140,41 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
+      // ── CoreTax Checklist Screen ────────────────────────────────────────
+      GoRoute(
+        path: AppRoutes.coretaxChecklist,
+        name: 'coretax-checklist',
+        builder: (context, state) => const CoreTaxChecklistView(),
+      ),
+
+      // ── Apa itu CoreTax Screen ───────────────────────────────────────────
+      GoRoute(
+        path: AppRoutes.apaItuCoretax,
+        name: 'apa-itu-coretax',
+        builder: (context, state) => const ApaItuCoretaxView(),
+      ),
+
+      // ── Edit Profile Screen ─────────────────────────────────────────────
+      GoRoute(
+        path: AppRoutes.editProfile,
+        name: 'edit-profile',
+        builder: (context, state) => const EditProfileView(),
+      ),
+
+      // ── Change Password Screen ─────────────────────────────────────────
+      GoRoute(
+        path: AppRoutes.changePassword,
+        name: 'change-password',
+        builder: (context, state) => const ChangePasswordView(),
+      ),
+
+      // ── FAQ Pajak Screen ───────────────────────────────────────────────
+      GoRoute(
+        path: AppRoutes.faqPajak,
+        name: 'faq-pajak',
+        builder: (context, state) => const FaqPajakView(),
+      ),
+
       // ── Simulasi Hasil Screen ─────────────────────────────────────────
       GoRoute(
         path: AppRoutes.simulasiHasil,
@@ -164,13 +211,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     builder: (context, state) => const JelajahiPosView(),
                     routes: [
                       GoRoute(
+                        path: 'pos-loading/:posId',
+                        name: 'pos-loading',
+                        builder: (context, state) {
+                          final posId = int.parse(
+                            state.pathParameters['posId']!,
+                          );
+                          return PosLoadingView(posId: posId);
+                        },
+                      ),
+                      GoRoute(
                         path: 'pos/:posId',
                         name: 'pos-detail',
                         builder: (context, state) {
                           final posId = int.parse(
                             state.pathParameters['posId']!,
                           );
-                          return PosDetailView(posId: posId);
+                          final initialSlide =
+                              int.tryParse(
+                                state.uri.queryParameters['slide'] ?? '0',
+                              ) ??
+                              0;
+                          return PosDetailView(
+                            posId: posId,
+                            initialSlide: initialSlide,
+                          );
                         },
                       ),
                     ],

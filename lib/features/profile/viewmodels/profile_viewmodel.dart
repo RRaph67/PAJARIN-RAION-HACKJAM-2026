@@ -44,31 +44,21 @@ class ProfileState {
 class ProfileViewModel extends StateNotifier<ProfileState> {
   final ProfileRepository _profileRepository;
 
-  ProfileViewModel({
-    required ProfileRepository profileRepository,
-  })  : _profileRepository = profileRepository,
-        super(const ProfileState());
+  ProfileViewModel({required ProfileRepository profileRepository})
+    : _profileRepository = profileRepository,
+      super(const ProfileState());
 
   // ─── Fetch Profil ────────────────────────────────────────────────────────
   // Mengambil data profil dari Supabase berdasarkan user ID.
   Future<void> fetchProfile(String userId) async {
-    state = state.copyWith(
-      status: ProfileStatus.loading,
-      message: null,
-    );
+    state = state.copyWith(status: ProfileStatus.loading, message: null);
 
     try {
       final profile = await _profileRepository.getProfile(userId);
 
-      state = state.copyWith(
-        status: ProfileStatus.success,
-        user: profile,
-      );
+      state = state.copyWith(status: ProfileStatus.success, user: profile);
     } on ProfileRepositoryException catch (e) {
-      state = state.copyWith(
-        status: ProfileStatus.error,
-        message: e.message,
-      );
+      state = state.copyWith(status: ProfileStatus.error, message: e.message);
     } catch (e) {
       state = state.copyWith(
         status: ProfileStatus.error,
@@ -86,10 +76,7 @@ class ProfileViewModel extends StateNotifier<ProfileState> {
     String? jobTitle,
     double? estimatedIncome,
   }) async {
-    state = state.copyWith(
-      status: ProfileStatus.loading,
-      message: null,
-    );
+    state = state.copyWith(status: ProfileStatus.loading, message: null);
 
     try {
       final updatedProfile = await _profileRepository.updateProfile(
@@ -106,10 +93,7 @@ class ProfileViewModel extends StateNotifier<ProfileState> {
         user: updatedProfile,
       );
     } on ProfileRepositoryException catch (e) {
-      state = state.copyWith(
-        status: ProfileStatus.error,
-        message: e.message,
-      );
+      state = state.copyWith(status: ProfileStatus.error, message: e.message);
     } catch (e) {
       state = state.copyWith(
         status: ProfileStatus.error,
@@ -127,7 +111,5 @@ class ProfileViewModel extends StateNotifier<ProfileState> {
 // ─── Provider ────────────────────────────────────────────────────────────────
 final profileViewModelProvider =
     StateNotifierProvider<ProfileViewModel, ProfileState>((ref) {
-  return ProfileViewModel(
-    profileRepository: ProfileRepository(),
-  );
-});
+      return ProfileViewModel(profileRepository: ProfileRepository());
+    });

@@ -1,7 +1,7 @@
 // =============================================================================
 // app_colors.dart
 // Menyediakan seluruh skala token warna lengkap (Orange & Green shade 50-950)
-// untuk RaionHackJam15 berdasarkan Design System.
+// untuk Pajarin berdasarkan Design System.
 // =============================================================================
 
 import 'package:flutter/material.dart';

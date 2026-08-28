@@ -169,6 +169,20 @@ class AuthViewModel extends StateNotifier<AuthState> {
     }
   }
 
+  // ─── Refresh profil dari database ────────────────────────────────────────
+  // Dipanggil setelah update profil agar data terbaru tampil di UI.
+  Future<void> refreshProfile() async {
+    final userId = _authRepository.currentUser?.id;
+    if (userId == null) return;
+
+    try {
+      final profile = await _profileRepository.getProfile(userId);
+      state = state.copyWith(user: profile);
+    } catch (_) {
+      // Biarkan state lama jika gagal refresh
+    }
+  }
+
   // ─── Reset state ke idle ─────────────────────────────────────────────────
   // Dipanggil setelah user melihat pesan error/sukses dan menutupnya.
   void resetStatus() {

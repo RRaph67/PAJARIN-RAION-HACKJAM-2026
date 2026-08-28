@@ -24,12 +24,14 @@ class RegisterView extends ConsumerStatefulWidget {
 
 class _RegisterViewState extends ConsumerState<RegisterView> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -38,6 +40,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
 
   /// Cek apakah semua field sudah terisi (untuk enable/disable button)
   bool get _isFormFilled =>
+      _nameController.text.trim().isNotEmpty &&
       _emailController.text.trim().isNotEmpty &&
       _passwordController.text.isNotEmpty &&
       _confirmPasswordController.text.isNotEmpty;
@@ -52,7 +55,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
     ref
         .read(authViewModelProvider.notifier)
         .register(
-          name: _emailController.text.trim().split('@').first,
+          name: _nameController.text.trim(),
           email: _emailController.text.trim(),
           password: _passwordController.text,
           userType: 'candidate',
@@ -141,9 +144,11 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                   children: [
                     // ── Frame Atas (Title + Input) ─────────────────
                     _FrameAtas(
+                      nameController: _nameController,
                       emailController: _emailController,
                       passwordController: _passwordController,
                       confirmPasswordController: _confirmPasswordController,
+                      onNameChanged: _onFieldChanged,
                       onEmailChanged: _onFieldChanged,
                       onPasswordChanged: _onFieldChanged,
                       onConfirmPasswordChanged: _onFieldChanged,
@@ -199,17 +204,21 @@ class _TitleFrame extends StatelessWidget {
 // InputFrame — Email + Password + Confirm Password (gap 12)
 // =============================================================================
 class _InputFrame extends StatelessWidget {
+  final TextEditingController nameController;
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final TextEditingController confirmPasswordController;
+  final ValueChanged<String?> onNameChanged;
   final ValueChanged<String?> onEmailChanged;
   final ValueChanged<String?> onPasswordChanged;
   final ValueChanged<String?> onConfirmPasswordChanged;
 
   const _InputFrame({
+    required this.nameController,
     required this.emailController,
     required this.passwordController,
     required this.confirmPasswordController,
+    required this.onNameChanged,
     required this.onEmailChanged,
     required this.onPasswordChanged,
     required this.onConfirmPasswordChanged,
@@ -219,6 +228,22 @@ class _InputFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // ── Nama ──────────────────────────────────────────────────
+        AppTextField(
+          controller: nameController,
+          hintText: 'Nama Lengkap',
+          prefixIcon: Icons.person_outline,
+          textCapitalization: TextCapitalization.words,
+          textInputAction: TextInputAction.next,
+          onChanged: onNameChanged,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Nama wajib diisi';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 12),
         // ── Email ──────────────────────────────────────────────────
         AppTextField(
           controller: emailController,
@@ -284,17 +309,21 @@ class _InputFrame extends StatelessWidget {
 // FrameAtas — TitleFrame + InputFrame (gap 24)
 // =============================================================================
 class _FrameAtas extends StatelessWidget {
+  final TextEditingController nameController;
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final TextEditingController confirmPasswordController;
+  final ValueChanged<String?> onNameChanged;
   final ValueChanged<String?> onEmailChanged;
   final ValueChanged<String?> onPasswordChanged;
   final ValueChanged<String?> onConfirmPasswordChanged;
 
   const _FrameAtas({
+    required this.nameController,
     required this.emailController,
     required this.passwordController,
     required this.confirmPasswordController,
+    required this.onNameChanged,
     required this.onEmailChanged,
     required this.onPasswordChanged,
     required this.onConfirmPasswordChanged,
@@ -310,9 +339,11 @@ class _FrameAtas extends StatelessWidget {
         const SizedBox(height: 24),
         // ── InputFrame ────────────────────────────────────────────
         _InputFrame(
+          nameController: nameController,
           emailController: emailController,
           passwordController: passwordController,
           confirmPasswordController: confirmPasswordController,
+          onNameChanged: onNameChanged,
           onEmailChanged: onEmailChanged,
           onPasswordChanged: onPasswordChanged,
           onConfirmPasswordChanged: onConfirmPasswordChanged,

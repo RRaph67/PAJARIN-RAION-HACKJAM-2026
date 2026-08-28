@@ -4,8 +4,6 @@
 // Menggunakan AppLoadingView reusable, delay 3 detik, lalu navigasi ke hasil.
 // =============================================================================
 
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -31,38 +29,25 @@ class SimulasiLoadingView extends StatefulWidget {
 
 class _SimulasiLoadingViewState extends State<SimulasiLoadingView> {
   @override
-  void initState() {
-    super.initState();
-    _startCountdown();
-  }
-
-  Future<void> _startCountdown() async {
-    // Delay 3 detik sebelum navigasi ke hasil
-    await Future.delayed(const Duration(seconds: 3));
-
-    if (!mounted) return;
-
-    // Navigasi ke halaman hasil, replace supaya tidak bisa back ke loading
-    context.pushReplacement(
-      AppRoutes.simulasiHasil,
-      extra: {
-        'gaji': widget.gaji,
-        'ptkp': widget.ptkp,
-        'tanggungan': widget.tanggungan,
-      },
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
     return AppLoadingView(
+      mascotPath: 'assets/svg/maskot_mikir.svg',
+      subtitle: 'Simulasi Kalkulator Pajak',
       title: 'Menghitung Pajak...',
-      subtitle: 'Mohon tunggu sebentar',
-      mascotAsset: 'assets/svg/maskot_mikir.svg',
-      mascotWidth: 250,
-      mascotHeight: 250,
-      loadingText: 'Memuat hasil simulasi',
-      onBackPressed: () => context.pop(),
+      mascotSize: 200,
+      delayDuration: const Duration(seconds: 5),
+      onLoadingDone: () {
+        if (!mounted) return;
+        context.go(
+          AppRoutes.simulasiHasil,
+          extra: {
+            'gaji': widget.gaji,
+            'ptkp': widget.ptkp,
+            'tanggungan': widget.tanggungan,
+          },
+        );
+      },
+      onBack: () => context.pop(),
     );
   }
 }

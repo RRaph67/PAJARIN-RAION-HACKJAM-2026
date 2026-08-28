@@ -1,6 +1,6 @@
 // =============================================================================
 // dio_client.dart
-// HTTP client berbasis Dio untuk proyek RaionHackJam15.
+// HTTP client berbasis Dio untuk proyek Pajarin.
 // Berisi: konfigurasi dasar, interceptor autentikasi, interceptor logging,
 // dan helper untuk pesan error yang ramah pengguna.
 // =============================================================================
@@ -25,20 +25,20 @@ class DioClient {
   DioClient() {
     _dio = Dio(
       BaseOptions(
-        baseUrl: AppConstants.baseUrlApi,         // URL dasar semua request
+        baseUrl: AppConstants.baseUrlApi, // URL dasar semua request
         connectTimeout: AppConstants.connectTimeout,
         receiveTimeout: AppConstants.receiveTimeout,
         sendTimeout: AppConstants.sendTimeout,
         headers: {
-          'Content-Type': 'application/json',     // kirim data dalam format JSON
-          'Accept': 'application/json',           // terima respons dalam format JSON
+          'Content-Type': 'application/json', // kirim data dalam format JSON
+          'Accept': 'application/json', // terima respons dalam format JSON
         },
       ),
     );
 
     // Daftarkan interceptor — urutan pendaftaran = urutan eksekusi
     _dio.interceptors.addAll([
-      _AuthInterceptor(),    // tambahkan token ke setiap request
+      _AuthInterceptor(), // tambahkan token ke setiap request
       _LoggingInterceptor(), // cetak log request & respons di konsol
     ]);
   }
@@ -55,8 +55,11 @@ class DioClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    return _dio.get<T>(path,
-        queryParameters: queryParameters, options: options);
+    return _dio.get<T>(
+      path,
+      queryParameters: queryParameters,
+      options: options,
+    );
   }
 
   /// Melakukan HTTP POST request ke [path] dengan [data] sebagai body.
@@ -66,8 +69,12 @@ class DioClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    return _dio.post<T>(path,
-        data: data, queryParameters: queryParameters, options: options);
+    return _dio.post<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+    );
   }
 
   /// Melakukan HTTP PUT request ke [path] untuk memperbarui data.
@@ -96,7 +103,9 @@ class DioClient {
 class _AuthInterceptor extends Interceptor {
   @override
   void onRequest(
-      RequestOptions options, RequestInterceptorHandler handler) async {
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString(AppConstants.prefKeyToken);
@@ -145,7 +154,8 @@ class _LoggingInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) {
     // ignore: avoid_print
     print(
-        '[DIO] ✗ ${err.response?.statusCode} ${err.requestOptions.path} — ${err.message}');
+      '[DIO] ✗ ${err.response?.statusCode} ${err.requestOptions.path} — ${err.message}',
+    );
     handler.next(err);
   }
 }

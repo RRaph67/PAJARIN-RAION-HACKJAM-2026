@@ -4,6 +4,7 @@
 // Mengelola loading, error, dan data progress dari Supabase.
 // =============================================================================
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/viewmodels/auth_viewmodel.dart';
 import '../models/pos_progress_model.dart';
@@ -54,14 +55,60 @@ class ProgressState {
 }
 
 /// ViewModel untuk mengelola progress user
+///
+/// Static cache: menyimpan progress terakhir agar tidak reset
+/// saat provider di-recreate (misal: auth state berubah).
 class ProgressViewModel extends StateNotifier<ProgressState> {
   final ProgressRepository _repository;
   final String? _userId;
 
+  /// Static cache — persist across ViewModel recreations
+  static Map<int, PosProgress>? _cachedProgress;
+  static String? _cachedUserId;
+
   ProgressViewModel(this._repository, this._userId)
-    : super(const ProgressState()) {
+    : super(
+        // ── Load dari cache jika ada (mencegah flash empty state) ──
+        _cachedProgress != null && _cachedUserId == _userId
+            ? ProgressState(posProgress: _cachedProgress!)
+            : const ProgressState(),
+      ) {
     if (_userId != null) {
-      loadProgress();
+      _initializeProgress();
+    }
+  }
+
+  /// Inisialisasi: load progress, dan kalau belum ada, buat default
+  Future<void> _initializeProgress() async {
+    final userId = _userId;
+    if (userId == null) return;
+
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final progress = await _repository.getUserProgress(userId);
+
+      // ── Kalau belum ada progress record, buat default ───────────────
+      if (progress.isEmpty) {
+        debugPrint(
+          '[ProgressVM] No progress found for user $userId, initializing defaults...',
+        );
+        await _repository.initDefaultProgress(userId);
+        final newProgress = await _repository.getUserProgress(userId);
+        state = state.copyWith(posProgress: newProgress, isLoading: false);
+        _cachedProgress = newProgress;
+        _cachedUserId = _userId;
+        debugPrint(
+          '[ProgressVM] Default progress initialized: ${newProgress.length} records',
+        );
+      } else {
+        state = state.copyWith(posProgress: progress, isLoading: false);
+        _cachedProgress = progress;
+        _cachedUserId = _userId;
+        debugPrint('[ProgressVM] Loaded ${progress.length} progress records');
+      }
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      debugPrint('[ProgressVM] Error initializing progress: $e');
     }
   }
 
@@ -74,31 +121,46 @@ class ProgressViewModel extends StateNotifier<ProgressState> {
     try {
       final progress = await _repository.getUserProgress(userId);
       state = state.copyWith(posProgress: progress, isLoading: false);
+      _cachedProgress = progress;
+      _cachedUserId = userId;
+      debugPrint('[ProgressVM] Reloaded ${progress.length} progress records');
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+      debugPrint('[ProgressVM] Error loading progress: $e');
     }
   }
 
-  /// Update status progress pos tertentu
-  Future<void> updatePosProgress(
+  /// Update status progress pos tertentu + return success/fail
+  Future<bool> updatePosProgress(
     int postId,
     PosProgressStatus newStatus,
   ) async {
     final userId = _userId;
-    if (userId == null) return;
+    if (userId == null) {
+      debugPrint('[ProgressVM] Cannot update: userId is null');
+      return false;
+    }
 
     try {
+      debugPrint('[ProgressVM] Updating pos $postId to ${newStatus.name}...');
+
       final updated = await _repository.upsertProgress(
         userId: userId,
         postId: postId,
         status: newStatus,
       );
 
+      // ── Update state lokal ──────────────────────────────────────────
       final newMap = Map<int, PosProgress>.from(state.posProgress);
       newMap[postId] = updated;
       state = state.copyWith(posProgress: newMap);
+
+      debugPrint('[ProgressVM] ✅ Pos $postId updated to ${newStatus.name}');
+      return true;
     } catch (e) {
       state = state.copyWith(error: e.toString());
+      debugPrint('[ProgressVM] ❌ Error updating pos $postId: $e');
+      return false;
     }
   }
 
@@ -112,6 +174,7 @@ class ProgressViewModel extends StateNotifier<ProgressState> {
       await loadProgress();
     } catch (e) {
       state = state.copyWith(error: e.toString());
+      debugPrint('[ProgressVM] Error init default progress: $e');
     }
   }
 }

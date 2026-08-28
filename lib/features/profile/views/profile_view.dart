@@ -1,328 +1,304 @@
 // =============================================================================
 // profile_view.dart
 // Konten halaman profil user — menampilkan data dari tabel `users` Supabase.
-// Memungkinkan user melihat dan mengupdate profil mereka.
+// Memungkinkan user melihat profil, progress belajar, dan menu navigasi.
+// Status mapping dipisahkan ke pos_data_model.dart untuk reusability.
 // =============================================================================
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/router/app_router.dart';
-import '../../../core/models/user_model.dart';
-import '../../../core/theme/app_colors.dart';
-import '../viewmodels/profile_viewmodel.dart';
-import '../../auth/viewmodels/auth_viewmodel.dart';
 
-class ProfileView extends ConsumerStatefulWidget {
+import '../../../core/models/pos_progress_model.dart';
+import '../../../core/models/user_model.dart';
+import '../../../core/providers/progress_provider.dart';
+import '../../../core/router/app_router.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_status_chip.dart';
+import '../../auth/viewmodels/auth_viewmodel.dart';
+import '../../home/models/pos_data_model.dart';
+
+class ProfileView extends ConsumerWidget {
   const ProfileView({super.key});
 
   @override
-  ConsumerState<ProfileView> createState() => _ProfileViewState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authViewModelProvider);
+    final progressState = ref.watch(progressViewModelProvider);
+    final user = authState.user;
 
-class _ProfileViewState extends ConsumerState<ProfileView> {
-  bool _isEditing = false;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ═══════════════ SECTION 1: HEADER PROFIL ═══════════════
+          _buildHeaderSection(context, user),
 
-  late TextEditingController _nameController;
-  late TextEditingController _jobTitleController;
-  late TextEditingController _incomeController;
+          const SizedBox(height: 24),
 
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController();
-    _jobTitleController = TextEditingController();
-    _incomeController = TextEditingController();
+          // ═══════════════ SECTION 2: PROGRESS BELAJAR ═══════════════
+          _buildProgressSection(progressState),
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadProfile();
-    });
-  }
+          const SizedBox(height: 24),
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _jobTitleController.dispose();
-    _incomeController.dispose();
-    super.dispose();
-  }
-
-  void _loadProfile() {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId != null) {
-      ref.read(profileViewModelProvider.notifier).fetchProfile(userId);
-    }
-  }
-
-  void _toggleEdit(UserModel user) {
-    setState(() {
-      _isEditing = !_isEditing;
-      if (_isEditing) {
-        _nameController.text = user.name;
-        _jobTitleController.text = user.jobTitle ?? '';
-        _incomeController.text = user.estimatedIncome?.toStringAsFixed(0) ?? '';
-      }
-    });
-  }
-
-  void _saveProfile() {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) return;
-
-    final estimatedIncome = double.tryParse(_incomeController.text);
-
-    ref
-        .read(profileViewModelProvider.notifier)
-        .updateProfile(
-          userId: userId,
-          name: _nameController.text.trim(),
-          jobTitle: _jobTitleController.text.trim().isNotEmpty
-              ? _jobTitleController.text.trim()
-              : null,
-          estimatedIncome: estimatedIncome,
-        );
-
-    setState(() => _isEditing = false);
-  }
-
-  Future<void> _logout() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Apakah kamu yakin ingin keluar?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Keluar', style: TextStyle(color: Colors.red)),
-          ),
+          // ═══════════════ SECTION 3: NAVIGATION MENU ═══════════════
+          _buildNavigationSection(context, ref),
         ],
       ),
     );
-
-    if (confirmed == true && mounted) {
-      await ref.read(authViewModelProvider.notifier).logout();
-      if (mounted) context.go(AppRoutes.splash);
-    }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final profileState = ref.watch(profileViewModelProvider);
+  // ─── Section 1: Header Profil ──────────────────────────────────────────
+  Widget _buildHeaderSection(BuildContext context, UserModel? user) {
+    final name = user?.name ?? 'User';
+    final jobTitle = user?.jobTitle ?? 'Belum diisi';
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
 
-    ref.listen<ProfileState>(profileViewModelProvider, (previous, next) {
-      if (next.message != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.message!),
-            backgroundColor: next.status == ProfileStatus.error
-                ? Colors.red
-                : Colors.green,
-          ),
-        );
-        ref.read(profileViewModelProvider.notifier).resetStatus();
-      }
-    });
-
-    return Column(
-      children: [
-        // ── Header ─────────────────────────────────────────────────
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Profil Saya',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              IconButton(
-                icon: const Icon(Icons.logout),
-                onPressed: _logout,
-                tooltip: 'Keluar',
-              ),
-            ],
-          ),
-        ),
-
-        // ── Body ───────────────────────────────────────────────────
-        Expanded(child: _buildBody(profileState)),
-      ],
-    );
-  }
-
-  Widget _buildBody(ProfileState profileState) {
-    if (profileState.status == ProfileStatus.loading &&
-        profileState.user == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (profileState.status == ProfileStatus.error &&
-        profileState.user == null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
-            const SizedBox(height: 16),
-            Text(profileState.message ?? 'Gagal memuat profil'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadProfile,
-              child: const Text('Coba Lagi'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final user = profileState.user;
-    if (user == null) {
-      return const Center(child: Text('Data profil tidak tersedia'));
-    }
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+    return Center(
       child: Column(
         children: [
-          const SizedBox(height: 16),
           CircleAvatar(
             radius: 48,
             backgroundColor: AppColors.orange500,
             child: Text(
-              user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
+              initial,
               style: const TextStyle(
                 fontSize: 36,
                 color: Colors.white,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ),
           const SizedBox(height: 16),
           Text(
-            user.name,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            name,
+            style: AppTypography.displayMediumExtraBold.copyWith(
+              color: AppColors.orange950,
+            ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
           Text(
-            user.email,
-            style: TextStyle(color: Colors.grey[600], fontSize: 14),
+            jobTitle,
+            style: AppTypography.titleMediumBold.copyWith(
+              color: AppColors.orange900,
+            ),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
-          const Divider(),
           const SizedBox(height: 16),
-          _isEditing ? _buildEditMode(user) : _buildDisplayMode(user),
-          const SizedBox(height: 24),
-          if (_isEditing) ...[
-            ElevatedButton.icon(
-              onPressed: _saveProfile,
-              icon: const Icon(Icons.save),
-              label: const Text('Simpan Perubahan'),
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: () => _toggleEdit(user),
-              child: const Text('Batal'),
-            ),
-          ] else ...[
-            OutlinedButton.icon(
-              onPressed: () => _toggleEdit(user),
-              icon: const Icon(Icons.edit),
-              label: const Text('Edit Profil'),
-            ),
-          ],
+          AppButton(
+            label: 'Ubah Profil & Data Diri',
+            icon: Icons.edit_outlined,
+            variant: ButtonVariant.secondary,
+            width: 361,
+            height: 48,
+            onPressed: () => context.push('/profile/edit-profile'),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildDisplayMode(UserModel user) {
+  // ─── Section 2: Progress Belajar ───────────────────────────────────────
+  Widget _buildProgressSection(ProgressState progressState) {
+    final posData = [
+      {'id': 1, 'title': 'Pos 1 - Modul PPh 21'},
+      {'id': 2, 'title': 'Pos 2 - Modul PTKP'},
+      {'id': 3, 'title': 'Pos 3 - Modul SPT'},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Progress Belajar',
+          style: AppTypography.titleLargeBold.copyWith(
+            color: AppColors.orange950,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...posData.map((pos) {
+          final posId = pos['id'] as int;
+          final title = pos['title'] as String;
+          final status = progressState.getStatus(posId);
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _buildProgressCard(title: title, status: status),
+          );
+        }),
+      ],
+    );
+  }
+
+  // ─── Progress Card — menggunakan shared helpers ────────────────────────
+  Widget _buildProgressCard({
+    required String title,
+    required PosProgressStatus status,
+  }) {
+    // Panggil shared helper dari pos_data_model.dart
+    final chipVariant = getProgressChipVariant(status);
+    final chipLabel = getProgressChipLabel(status);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.orange100,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: AppTypography.titleMediumBold.copyWith(
+                color: AppColors.orange950,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 12),
+          AppStatusChip(variant: chipVariant, label: chipLabel),
+        ],
+      ),
+    );
+  }
+
+  // ─── Section 3: Navigation Menu ────────────────────────────────────────
+  Widget _buildNavigationSection(BuildContext context, WidgetRef ref) {
     return Column(
       children: [
-        _InfoTile(
-          icon: Icons.badge_outlined,
-          label: 'Tipe Pengguna',
-          value: user.userType.toUpperCase(),
+        _buildMenuCard(
+          title: 'CoreTax Checklist',
+          icon: Icons.checklist_outlined,
+          backgroundColor: AppColors.green100,
+          textColor: AppColors.green900,
+          iconColor: AppColors.green700,
+          onTap: () => context.push('/profile/coretax-checklist'),
         ),
-        const SizedBox(height: 12),
-        _InfoTile(
-          icon: Icons.work_outline,
-          label: 'Pekerjaan',
-          value: user.jobTitle ?? 'Belum diisi',
+        const SizedBox(height: 8),
+        _buildMenuCard(
+          title: 'FAQ Pajak',
+          icon: Icons.help_outline,
+          backgroundColor: AppColors.green100,
+          textColor: AppColors.green900,
+          iconColor: AppColors.green700,
+          onTap: () => context.push('/profile/faq-pajak'),
         ),
-        const SizedBox(height: 12),
-        _InfoTile(
-          icon: Icons.attach_money,
-          label: 'Estimasi Penghasilan',
-          value: user.estimatedIncome != null
-              ? 'Rp ${user.estimatedIncome!.toStringAsFixed(0)}'
-              : 'Belum diisi',
+        const SizedBox(height: 8),
+        _buildMenuCard(
+          title: 'Ubah Password',
+          icon: Icons.lock_outline,
+          backgroundColor: AppColors.green100,
+          textColor: AppColors.green900,
+          iconColor: AppColors.green700,
+          onTap: () => context.push('/profile/change-password'),
+        ),
+        const SizedBox(height: 8),
+        _buildMenuCard(
+          title: 'Logout',
+          icon: Icons.logout,
+          backgroundColor: const Color(0xFFFDE8E8),
+          textColor: const Color(0xFFB91C1C),
+          iconColor: const Color(0xFFB91C1C),
+          onTap: () => _showLogoutDialog(context, ref),
         ),
       ],
     );
   }
 
-  Widget _buildEditMode(UserModel user) {
-    return Column(
-      children: [
-        TextFormField(
-          controller: _nameController,
-          decoration: const InputDecoration(
-            labelText: 'Nama',
-            prefixIcon: Icon(Icons.person_outline),
-          ),
+  // ─── Menu Card ─────────────────────────────────────────────────────────
+  Widget _buildMenuCard({
+    required String title,
+    required IconData icon,
+    required Color backgroundColor,
+    required Color textColor,
+    required Color iconColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(16),
         ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: _jobTitleController,
-          decoration: const InputDecoration(
-            labelText: 'Pekerjaan',
-            prefixIcon: Icon(Icons.work_outline),
-          ),
+        child: Row(
+          children: [
+            Icon(icon, size: 22, color: iconColor),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: AppTypography.titleMediumBold.copyWith(color: textColor),
+              ),
+            ),
+            Icon(Icons.chevron_right, size: 22, color: textColor),
+          ],
         ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: _incomeController,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Estimasi Penghasilan',
-            prefixIcon: Icon(Icons.attach_money),
-          ),
-        ),
-      ],
+      ),
     );
   }
-}
 
-class _InfoTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
-  const _InfoTile({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.orange500),
-      title: Text(
-        label,
-        style: const TextStyle(fontSize: 12, color: Colors.grey),
+  // ─── Logout Dialog ─────────────────────────────────────────────────────
+  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Logout',
+          style: TextStyle(
+            fontFamily: 'Nunito',
+            fontWeight: FontWeight.w800,
+            color: AppColors.orange950,
+          ),
+        ),
+        content: const Text(
+          'Apakah kamu yakin ingin keluar?',
+          style: TextStyle(
+            fontFamily: 'Nunito',
+            fontWeight: FontWeight.w500,
+            color: AppColors.orange900,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(
+              'Batal',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontWeight: FontWeight.w600,
+                color: AppColors.orange900,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await ref.read(authViewModelProvider.notifier).logout();
+              if (context.mounted) context.go(AppRoutes.login);
+            },
+            child: const Text(
+              'Keluar',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontWeight: FontWeight.w700,
+                color: Color(0xFFB91C1C),
+              ),
+            ),
+          ),
+        ],
       ),
-      subtitle: Text(
-        value,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-      ),
-      contentPadding: EdgeInsets.zero,
     );
   }
 }

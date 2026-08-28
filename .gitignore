@@ -11,6 +11,7 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+RULES.md
 
 # IntelliJ related
 *.iml
@@ -43,3 +44,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Release signing (JANGAN commit!)
+/android/key.properties
+/android/app/release-key.jks

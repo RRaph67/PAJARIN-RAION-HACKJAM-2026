@@ -2,10 +2,8 @@
 // kalkulator_simulasi_view.dart
 // Halaman kalkulator simulasi pajak.
 // Struktur: HeaderFrame → InputFrame → TipsFrame → Button.
-// Status PTKP & Tanggungan dibuka via popup bottom sheet radio button.
+// Business logic (validation, options, parsing) dipisahkan ke ViewModel.
 // =============================================================================
-
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -17,6 +15,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_radio_option.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../viewmodels/kalkulator_simulasi_viewmodel.dart';
 
 class KalkulatorSimulasiView extends StatefulWidget {
   const KalkulatorSimulasiView({super.key});
@@ -26,49 +25,31 @@ class KalkulatorSimulasiView extends StatefulWidget {
 }
 
 class _KalkulatorSimulasiViewState extends State<KalkulatorSimulasiView> {
-  final _salaryController = TextEditingController();
-  final _ptkpController = TextEditingController();
-  final _tanggunganController = TextEditingController();
+  late final KalkulatorSimulasiViewModel _viewModel;
+  late final TextEditingController _salaryController;
+  late final TextEditingController _ptkpController;
+  late final TextEditingController _tanggunganController;
 
-  // ── Opsi Dropdown ──────────────────────────────────────────────────────
-  static const List<String> _ptkpOptions = ['Belum Menikah', 'Sudah Menikah'];
-
-  static const List<String> _tanggunganOptions = [
-    'Tidak Ada Tanggungan',
-    '1 Tanggungan',
-    '2 Tanggungan',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = KalkulatorSimulasiViewModel();
+    _salaryController = TextEditingController();
+    _ptkpController = TextEditingController();
+    _tanggunganController = TextEditingController();
+  }
 
   @override
   void dispose() {
+    _viewModel.dispose();
     _salaryController.dispose();
     _ptkpController.dispose();
     _tanggunganController.dispose();
     super.dispose();
   }
 
-  /// Cek apakah semua field sudah terisi
-  bool get _isFormFilled =>
-      _salaryController.text.trim().isNotEmpty &&
-      _ptkpController.text.isNotEmpty &&
-      _tanggunganController.text.isNotEmpty;
-
   void _onFieldChanged(_) {
     setState(() {});
-  }
-
-  /// Konversi string tanggungan → jumlah numeric
-  int _parseTanggungan(String value) {
-    switch (value) {
-      case 'Tidak Ada Tanggungan':
-        return 0;
-      case '1 Tanggungan':
-        return 1;
-      case '2 Tanggungan':
-        return 2;
-      default:
-        return 0;
-    }
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -165,25 +146,16 @@ class _KalkulatorSimulasiViewState extends State<KalkulatorSimulasiView> {
 
   /// Navigasi ke loading → delay 3 detik → hasil kalkulasi
   void _submitForm() {
-    if (!_isFormFilled) return;
-
-    final gaji =
-        double.tryParse(
-          _salaryController.text.replaceAll('.', '').replaceAll(',', ''),
-        ) ??
-        0;
-    final ptkp = _ptkpController.text;
-    final tanggungan = _parseTanggungan(_tanggunganController.text);
-
-    // Navigasi ke loading page
-    context.push(
-      AppRoutes.simulasiLoading,
-      extra: {'gaji': gaji, 'ptkp': ptkp, 'tanggungan': tanggungan},
-    );
+    final data = _viewModel.getSubmitData();
+    context.push(AppRoutes.simulasiLoading, extra: data);
   }
 
   @override
   Widget build(BuildContext context) {
+    // ── Get form state from ViewModel ──────────────────────────────────
+    final viewModelState = _viewModel.state;
+    final isFormFilled = viewModelState.isFormFilled;
+
     return Scaffold(
       backgroundColor: AppColors.orange50,
       body: SafeArea(
@@ -199,7 +171,6 @@ class _KalkulatorSimulasiViewState extends State<KalkulatorSimulasiView> {
                 padding: const EdgeInsets.symmetric(vertical: 32),
                 child: Column(
                   children: [
-                    // ── Logo ───────────────────────────────────────────
                     SvgPicture.asset(
                       'assets/svg/logo_square_outline.svg',
                       width: 60,
@@ -207,8 +178,6 @@ class _KalkulatorSimulasiViewState extends State<KalkulatorSimulasiView> {
                       fit: BoxFit.contain,
                     ),
                     const SizedBox(height: 16),
-
-                    // ── Title ──────────────────────────────────────────
                     Text(
                       'Simulasi Hitungan Pajak',
                       style: AppTypography.displaySmallExtraBold.copyWith(
@@ -217,8 +186,6 @@ class _KalkulatorSimulasiViewState extends State<KalkulatorSimulasiView> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
-
-                    // ── Subtitle ───────────────────────────────────────
                     Text(
                       'Biar kamu nggak bingung lagi~',
                       style: AppTypography.headlineSmallSemiBold.copyWith(
@@ -245,7 +212,10 @@ class _KalkulatorSimulasiViewState extends State<KalkulatorSimulasiView> {
                       hintText: 'Contoh: 5000000',
                       keyboardType: TextInputType.number,
                       textInputAction: TextInputAction.next,
-                      onChanged: _onFieldChanged,
+                      onChanged: (value) {
+                        _viewModel.updateGaji(value);
+                        _onFieldChanged(value);
+                      },
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Gaji wajib diisi';
@@ -270,15 +240,19 @@ class _KalkulatorSimulasiViewState extends State<KalkulatorSimulasiView> {
                       ),
                       onTap: () => _openSelectSheet(
                         title: 'Status PTKP',
-                        options: _ptkpOptions,
+                        options: KalkulatorSimulasiViewModel.ptkpOptions,
                         currentValue: _ptkpController.text,
-                        onSelect: (value) =>
-                            setState(() => _ptkpController.text = value),
+                        onSelect: (value) {
+                          setState(() {
+                            _ptkpController.text = value;
+                            _viewModel.updateStatusPTKP(value);
+                          });
+                        },
                       ),
                     ),
                     const SizedBox(height: 12),
 
-                    // ── TextField Tanggungan (Tanpa Label) ──────────────
+                    // ── Tanggungan ─────────────────────────────────────
                     AppTextField(
                       controller: _tanggunganController,
                       hintText: 'Pilih Jumlah Tanggungan',
@@ -291,10 +265,14 @@ class _KalkulatorSimulasiViewState extends State<KalkulatorSimulasiView> {
                       ),
                       onTap: () => _openSelectSheet(
                         title: 'Jumlah Tanggungan',
-                        options: _tanggunganOptions,
+                        options: KalkulatorSimulasiViewModel.tanggunganOptions,
                         currentValue: _tanggunganController.text,
-                        onSelect: (value) =>
-                            setState(() => _tanggunganController.text = value),
+                        onSelect: (value) {
+                          setState(() {
+                            _tanggunganController.text = value;
+                            _viewModel.updateJumlahTanggungan(value);
+                          });
+                        },
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -342,7 +320,7 @@ class _KalkulatorSimulasiViewState extends State<KalkulatorSimulasiView> {
                 icon: Icons.arrow_forward,
                 iconPosition: IconPosition.right,
                 iconSize: 16,
-                enabled: _isFormFilled,
+                enabled: isFormFilled,
                 onPressed: _submitForm,
               ),
               const SizedBox(height: 24),

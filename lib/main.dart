@@ -1,6 +1,6 @@
 // =============================================================================
 // main.dart
-// Titik masuk utama aplikasi RaionHackJam15.
+// Titik masuk utama aplikasi Pajarin.
 // Urutan inisialisasi: Flutter binding → Supabase → App
 // =============================================================================
 
@@ -22,18 +22,14 @@ Future<void> main() async {
   // Dapatkan nilainya dari: Supabase Dashboard → Project Settings → API
   await Supabase.initialize(
     url: AppConstants.supabaseUrl,
-    anonKey: AppConstants.supabaseAnonKey,
+    publishableKey: AppConstants.supabaseAnonKey,
     debug: true, // ubah ke false saat production
   );
 
   // ── 3. Jalankan aplikasi dan bungkus dengan ProviderScope ─────────────────
   // ProviderScope diperlukan agar semua Riverpod provider bisa diakses
   // di seluruh widget tree.
-  runApp(
-    const ProviderScope(
-      child: RaionHackJam15App(),
-    ),
-  );
+  runApp(const ProviderScope(child: PajarinApp()));
 }
 
 // ─── Akses cepat ke Supabase client ───────────────────────────────────────────
@@ -42,8 +38,8 @@ Future<void> main() async {
 final supabase = Supabase.instance.client;
 
 // ─── Widget Root Aplikasi ─────────────────────────────────────────────────────
-class RaionHackJam15App extends ConsumerWidget {
-  const RaionHackJam15App({super.key});
+class PajarinApp extends ConsumerWidget {
+  const PajarinApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -67,7 +63,6 @@ class RaionHackJam15App extends ConsumerWidget {
           // ── Info Aplikasi ──────────────────────────────────────────────
           title: AppConstants.appName,
           debugShowCheckedModeBanner: false, // sembunyikan banner debug
-
           // ── Tema ──────────────────────────────────────────────────────
           theme: AppTheme.lightTheme,
           // [PLACEHOLDER] Aktifkan setelah dark theme selesai dibuat:

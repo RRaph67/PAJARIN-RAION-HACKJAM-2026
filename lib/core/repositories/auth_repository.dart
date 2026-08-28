@@ -30,10 +30,7 @@ class AuthRepository {
     required String password,
   }) async {
     try {
-      final response = await _auth.signUp(
-        email: email,
-        password: password,
-      );
+      final response = await _auth.signUp(email: email, password: password);
       return response;
     } on AuthException catch (e) {
       throw AuthRepositoryException(e.message);
@@ -73,6 +70,37 @@ class AuthRepository {
     }
   }
 
+  // ─── Update Password ───────────────────────────────────────────────────
+  // Memperbarui password user yang sedang login.
+  // Verifikasi password lama dilakukan dengan re-authenticate.
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final user = currentUser;
+      if (user == null || user.email == null) {
+        throw AuthRepositoryException('Tidak ada user yang sedang login.');
+      }
+
+      // Step 1: Re-authenticate dengan password lama untuk verifikasi
+      await _auth.signInWithPassword(
+        email: user.email!,
+        password: currentPassword,
+      );
+
+      // Step 2: Update password baru
+      await _auth.updateUser(UserAttributes(password: newPassword));
+    } on AuthException catch (e) {
+      throw AuthRepositoryException(e.message);
+    } catch (e) {
+      if (e is AuthRepositoryException) rethrow;
+      throw AuthRepositoryException(
+        'Terjadi kesalahan saat memperbarui password: $e',
+      );
+    }
+  }
+
   // ─── Kirim email reset password ──────────────────────────────────────────
   Future<void> resetPassword(String email) async {
     try {
@@ -81,7 +109,8 @@ class AuthRepository {
       throw AuthRepositoryException(e.message);
     } catch (e) {
       throw AuthRepositoryException(
-          'Terjadi kesalahan saat reset password: $e');
+        'Terjadi kesalahan saat reset password: $e',
+      );
     }
   }
 }

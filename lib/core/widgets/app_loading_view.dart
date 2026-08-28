@@ -1,47 +1,82 @@
 // =============================================================================
 // app_loading_view.dart
-// Komponen halaman loading reusable untuk seluruh aplikasi.
-// Bisa dikustomisasi: judul, sub-judul, ukuran maskot, dan aksi back.
+// Komponen reusable loading screen untuk proses loading di berbagai page.
+// Menerima parameter: mascotPath, subtitle, title, delayDuration, onLoadingDone.
+// Background: orange50, animasi fade-in pada konten.
 // =============================================================================
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import 'app_back_button.dart';
 
-class AppLoadingView extends StatelessWidget {
-  /// Judul utama (Main Title) — besar, ExtraBold.
+class AppLoadingView extends StatefulWidget {
+  /// Path asset SVG mascot
+  final String mascotPath;
+
+  /// Teks sub-judul (misal: "Pos 1 - Modul PPh 21")
+  final String subtitle;
+
+  /// Teks judul utama
   final String title;
 
-  /// Sub judul di atas main title — SemiBold 18.
-  final String? subtitle;
+  /// Durasi delay sebelum callback dipanggil (default: 5 detik)
+  final Duration delayDuration;
 
-  /// Path aset maskot. Default: assets/svg/maskot_mikir.svg.
-  final String mascotAsset;
+  /// Callback setelah delay selesai
+  final VoidCallback onLoadingDone;
 
-  /// Lebar maskot. Default: 250.
-  final double mascotWidth;
+  /// Callback saat tombol back ditekan (opsional)
+  final VoidCallback? onBack;
 
-  /// Tinggi maskot. Default: 250.
-  final double mascotHeight;
-
-  /// Callback saat tombol back ditekan. Jika null, tombol tidak ditampilkan.
-  final VoidCallback? onBackPressed;
-
-  /// Teks "Memuat ...". Default: "Memuat".
-  final String loadingText;
+  /// Ukuran mascot (default: 160x160)
+  final double mascotSize;
 
   const AppLoadingView({
     super.key,
+    required this.mascotPath,
+    required this.subtitle,
     required this.title,
-    this.subtitle,
-    this.mascotAsset = 'assets/svg/maskot_mikir.svg',
-    this.mascotWidth = 250,
-    this.mascotHeight = 250,
-    this.onBackPressed,
-    this.loadingText = 'Memuat',
+    this.delayDuration = const Duration(seconds: 5),
+    required this.onLoadingDone,
+    this.onBack,
+    this.mascotSize = 160,
   });
+
+  @override
+  State<AppLoadingView> createState() => _AppLoadingViewState();
+}
+
+class _AppLoadingViewState extends State<AppLoadingView>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeIn;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // ── Animasi fade-in ──────────────────────────────────────────────
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _fadeIn = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+    _controller.forward();
+
+    // ── Timer delay ──────────────────────────────────────────────────
+    Timer(widget.delayDuration, () {
+      if (mounted) widget.onLoadingDone();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,76 +84,75 @@ class AppLoadingView extends StatelessWidget {
       backgroundColor: AppColors.orange50,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Back Button ──────────────────────────────────────────────
-              if (onBackPressed != null)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: AppBackButton(onPressed: onBackPressed),
-                ),
-
-              // ── Spacer atas ─────────────────────────────────────────────
-              const Spacer(),
-
-              // ── Maskot ──────────────────────────────────────────────────
-              SvgPicture.asset(
-                mascotAsset,
-                width: mascotWidth,
-                height: mascotHeight,
-                fit: BoxFit.contain,
+              // ── Top Bar: Back Button ────────────────────────────────
+              AppBackButton(
+                onPressed: widget.onBack ?? () => Navigator.of(context).pop(),
               ),
 
-              const SizedBox(height: 16),
+              // ── Main Content (Center) ──────────────────────────────
+              Expanded(
+                child: FadeTransition(
+                  opacity: _fadeIn,
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // ── Mascot SVG ────────────────────────────
+                        SizedBox(
+                          width: widget.mascotSize,
+                          height: widget.mascotSize,
+                          child: SvgPicture.asset(
+                            widget.mascotPath,
+                            fit: BoxFit.cover,
+                            placeholderBuilder: (context) => Icon(
+                              Icons.image_outlined,
+                              size: widget.mascotSize * 0.5,
+                              color: AppColors.orange300,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
 
-              // ── Sub Title (opsional) ────────────────────────────────────
-              if (subtitle != null)
-                Text(
-                  subtitle!,
-                  textAlign: TextAlign.center,
-                  style: AppTypography.headlineSmallSemiBold.copyWith(
-                    color: AppColors.orange950,
+                        // ── Subtitle ──────────────────────────────
+                        Text(
+                          widget.subtitle,
+                          style: AppTypography.titleMediumBold.copyWith(
+                            color: AppColors.orange950,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+
+                        // ── Title ─────────────────────────────────
+                        Text(
+                          widget.title,
+                          style: AppTypography.displaySmallBold.copyWith(
+                            color: AppColors.orange950,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-
-              if (subtitle != null) const SizedBox(height: 8),
-
-              // ── Main Title ──────────────────────────────────────────────
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: AppTypography.displaySmallExtraBold.copyWith(
-                  color: AppColors.orange950,
-                ),
               ),
 
-              const SizedBox(height: 24),
-
-              // ── Loading Circle ──────────────────────────────────────────
-              SizedBox(
-                width: 50,
-                height: 50,
-                child: CircularProgressIndicator(
-                  strokeWidth: 5,
-                  color: AppColors.orange950,
-                  backgroundColor: AppColors.orange200,
+              // ── Footer: "Memuat" ────────────────────────────────────
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: Text(
+                    'Memuat',
+                    style: AppTypography.bodySmallSemiBold.copyWith(
+                      color: AppColors.orange950,
+                    ),
+                  ),
                 ),
               ),
-
-              const SizedBox(height: 12),
-
-              // ── "Memuat" Text ───────────────────────────────────────────
-              Text(
-                loadingText,
-                style: AppTypography.bodySmallSemiBold.copyWith(
-                  color: AppColors.orange950,
-                ),
-              ),
-
-              // ── Spacer bawah ────────────────────────────────────────────
-              const Spacer(),
             ],
           ),
         ),

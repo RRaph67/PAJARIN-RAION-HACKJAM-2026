@@ -58,7 +58,9 @@ class OnboardingIntroView extends StatelessWidget {
                             child: Container(
                               width: 117,
                               height: 24,
-                              color: const Color(0xFF493000).withOpacity(0.25),
+                              color: const Color(
+                                0xFF493000,
+                              ).withValues(alpha: 0.25),
                             ),
                           ),
                         ),

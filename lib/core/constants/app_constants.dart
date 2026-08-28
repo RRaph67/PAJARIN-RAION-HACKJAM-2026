@@ -1,6 +1,6 @@
 // =============================================================================
 // app_constants.dart
-// Semua konstanta terpusat untuk proyek RaionHackJam15.
+// Semua konstanta terpusat untuk proyek Pajarin.
 // Gunakan Ctrl+Shift+F dan cari "[PLACEHOLDER]" untuk menemukan semua nilai
 // yang perlu diisi sebelum aplikasi bisa berjalan.
 // =============================================================================
@@ -62,6 +62,6 @@ class AppConstants {
   static const double designHeight = 800;
 
   // ─── Informasi Aplikasi ───────────────────────────────────────────────────
-  static const String appName = 'RaionHackJam15';
+  static const String appName = 'Pajarin';
   static const String appVersion = '1.0.0';
 }
